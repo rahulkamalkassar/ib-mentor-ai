@@ -1,9 +1,28 @@
 'use client'
 
+import { useState } from 'react'
 import MainLayout from '@/components/layout/MainLayout'
 import Header from '@/components/layout/Header'
-import { Check, Zap, Crown, Star, Shield } from 'lucide-react'
+import { Check, Zap, Crown, Star, Shield, Loader2 } from 'lucide-react'
 import { UPGRADE_PLANS } from '@/data/ib-data'
+
+async function startCheckout(planId: string, setLoading: (id: string | null) => void) {
+  setLoading(planId)
+  try {
+    const res = await fetch('/api/stripe/checkout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ planId }),
+    })
+    const data = await res.json()
+    if (data.url) window.location.href = data.url
+    else console.error('Checkout error:', data.error)
+  } catch (err) {
+    console.error(err)
+  } finally {
+    setLoading(null)
+  }
+}
 
 const PLAN_META: Record<string, { icon: React.ReactNode; color: string; desc: string }> = {
   free:     { icon: <Shield style={{ width: 20, height: 20 }} />,                                   color: '#475569', desc: 'Get started with the basics' },
@@ -14,6 +33,7 @@ const PLAN_META: Record<string, { icon: React.ReactNode; color: string; desc: st
 }
 
 export default function UpgradePage() {
+  const [loading, setLoading] = useState<string | null>(null)
   const mainPlans = UPGRADE_PLANS.slice(0, 4)
   const ultimatePlan = UPGRADE_PLANS[4]
 
@@ -90,15 +110,18 @@ export default function UpgradePage() {
 
                 {/* CTA */}
                 <button
+                  disabled={isFree || loading === plan.id}
+                  onClick={() => !isFree && startCheckout(plan.id, setLoading)}
                   style={
                     isFree
                       ? { width: '100%', padding: '10px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, background: '#1e2a3a', color: '#475569', border: '1px solid #2d3748', cursor: 'default' }
                       : isPopular
-                        ? { width: '100%', padding: '10px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: 'white', border: 'none', boxShadow: '0 4px 16px rgba(124,58,237,0.3)', cursor: 'pointer' }
-                        : { width: '100%', padding: '10px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}40`, cursor: 'pointer' }
+                        ? { width: '100%', padding: '10px', borderRadius: '10px', fontSize: '13px', fontWeight: 700, background: 'linear-gradient(135deg, #7c3aed, #6d28d9)', color: 'white', border: 'none', boxShadow: '0 4px 16px rgba(124,58,237,0.3)', cursor: loading === plan.id ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }
+                        : { width: '100%', padding: '10px', borderRadius: '10px', fontSize: '13px', fontWeight: 600, background: `${meta.color}18`, color: meta.color, border: `1px solid ${meta.color}40`, cursor: loading === plan.id ? 'wait' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }
                   }
                 >
-                  {isFree ? 'Current Plan' : `Get ${plan.name}`}
+                  {loading === plan.id && <Loader2 style={{ width: 13, height: 13, animation: 'spin 1s linear infinite' }} />}
+                  {isFree ? 'Current Plan' : loading === plan.id ? 'Redirecting…' : `Get ${plan.name}`}
                 </button>
               </div>
             )
@@ -138,8 +161,13 @@ export default function UpgradePage() {
               <div style={{ textAlign: 'center', minWidth: '160px' }}>
                 <div style={{ fontSize: '52px', fontWeight: 800, color: 'white', lineHeight: 1 }}>${ultimatePlan.price}</div>
                 <div style={{ fontSize: '13px', color: '#64748b', marginBottom: '20px', marginTop: '4px' }}>one-time</div>
-                <button style={{ padding: '12px 28px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, color: 'white', background: 'linear-gradient(135deg, #d97706, #f59e0b)', border: 'none', boxShadow: '0 4px 20px rgba(245,158,11,0.3)', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                  Get Ultimate →
+                <button
+                  onClick={() => startCheckout('ultimate', setLoading)}
+                  disabled={loading === 'ultimate'}
+                  style={{ padding: '12px 28px', borderRadius: '12px', fontSize: '14px', fontWeight: 700, color: 'white', background: 'linear-gradient(135deg, #d97706, #f59e0b)', border: 'none', boxShadow: '0 4px 20px rgba(245,158,11,0.3)', cursor: loading === 'ultimate' ? 'wait' : 'pointer', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}
+                >
+                  {loading === 'ultimate' && <Loader2 style={{ width: 14, height: 14, animation: 'spin 1s linear infinite' }} />}
+                  {loading === 'ultimate' ? 'Redirecting…' : 'Get Ultimate →'}
                 </button>
               </div>
             </div>
