@@ -3,10 +3,11 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ChevronLeft, ChevronRight, Sparkles, Check } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react'
 import dynamic from 'next/dynamic'
 import { DP_SUBJECTS, MYP_SUBJECTS, IB_TOPICS } from '@/data/ib-data'
 import { OnboardingData } from '@/types'
+import { LogoMark } from '@/components/ui/LogoMark'
 
 const ReactConfetti = dynamic(() => import('react-confetti'), { ssr: false })
 
@@ -126,8 +127,8 @@ export default function OnboardingPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #7c3aed, #06b6d4)' }}>
-              <Sparkles className="w-4 h-4 text-white" />
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: '#0d0f1a', border: '1px solid rgba(124,58,237,0.25)' }}>
+              <LogoMark size={26} />
             </div>
             <span className="font-bold text-white text-lg">IB Mentor AI</span>
           </div>
