@@ -129,17 +129,47 @@ export interface UpgradePlan {
 }
 
 export interface OnboardingData {
+  // Step 0
   programme: string
+  // Step 1
   subjects: OnboardingSubject[]
+  subjectGoalGrades: Record<string, number>
+  // Step 2 – Goals
   goalPoints: number
   universityAim: string
+  backupUniversity: string
+  careerInterest: string
   challenges: string[]
+  // Step 3 – Academic standing
+  selfAssessment: string
+  biggestWorries: string[]
+  // Step 4 – Study schedule
   studyHours: number
   studyTimes: string[]
+  sessionLength: number
+  studyEnvironment: string[]
   examProximity: string
+  // Step 5 – IA / EE / TOK (DP only)
+  iaStatus: Record<string, string>
+  eeSubject: string
+  eeStatus: string
+  tokEssayStatus: string
+  casHours: number
+  // Step 6 – Weak topics
   weakTopics: Record<string, string[]>
+  // Step 7 – Exam prep
+  examTimeManagement: string
+  examFears: string[]
+  mockGrades: Record<string, number>
+  // Step 8 – Resources & learning
   learningStyles: string[]
+  resourcePreferences: string[]
+  noteTakingStyle: string
+  // Step 9 – AI setup
   aiPersonality: string
+  motivationStyle: string
+  responseLength: string
+  checkInFrequency: string
 }
 
 export interface OnboardingSubject {

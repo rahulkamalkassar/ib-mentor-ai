@@ -58,6 +58,7 @@ export default function AIHelper() {
     <>
       {/* Floating Button */}
       <button
+        data-ai-trigger
         onClick={() => setOpen(true)}
         className={cn(
           'fixed bottom-6 right-6 w-14 h-14 rounded-full flex items-center justify-center z-50 transition-all duration-300 pulse-purple shadow-lg',
