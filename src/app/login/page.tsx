@@ -2,7 +2,7 @@
 
 import { signIn } from 'next-auth/react'
 import { useState } from 'react'
-import { LogoMark } from '@/components/ui/LogoMark'
+import { Logo } from '@/components/ui/Logo'
 import { BookOpen, BarChart3, Brain } from 'lucide-react'
 
 export default function LoginPage() {
@@ -21,11 +21,7 @@ export default function LoginPage() {
       <div style={{ width: '100%', maxWidth: '420px', position: 'relative' }}>
 
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '40px', gap: '12px' }}>
-          <LogoMark size={48} />
-          <div style={{ textAlign: 'center' }}>
-            <h1 style={{ fontSize: '22px', fontWeight: 700, color: 'white', marginBottom: '4px' }}>IB Mentor AI</h1>
-            <p style={{ fontSize: '13px', color: '#64748b' }}>Your personalised IB study companion</p>
-          </div>
+          <Logo size="lg" variant="stacked" />
         </div>
 
         <div style={{ background: '#161827', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.07)', padding: '36px', boxShadow: '0 24px 64px rgba(0,0,0,0.4)' }}>

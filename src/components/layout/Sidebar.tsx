@@ -7,7 +7,7 @@ import {
   ClipboardList, BarChart3, Settings, Zap, Scroll, Brain, ListChecks, GraduationCap, Library
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { LogoMark } from '@/components/ui/LogoMark'
+import { Logo } from '@/components/ui/Logo'
 
 const mainNav = [
   { href: '/dashboard',      label: 'Dashboard',      icon: LayoutDashboard },
@@ -77,11 +77,7 @@ export default function Sidebar() {
         className="flex items-center gap-3 px-5 flex-shrink-0"
         style={{ height: '60px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
       >
-        <LogoMark size={30} />
-        <div className="min-w-0">
-          <p className="font-semibold text-white text-sm leading-tight truncate">IB Mentor AI</p>
-          <p className="text-xs leading-tight truncate" style={{ color: 'var(--text-muted)' }}>Study Smarter</p>
-        </div>
+        <Logo size="sm" variant="horizontal" />
       </div>
 
       {/* Main nav */}
