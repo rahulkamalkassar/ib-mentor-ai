@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Check } from 'lucide-react'
@@ -36,6 +36,101 @@ const initialData: OnboardingData = {
   examTimeManagement: '', examFears: [], mockGrades: {},
   learningStyles: [], resourcePreferences: [], noteTakingStyle: '',
   aiPersonality: 'Friendly tutor', motivationStyle: '', responseLength: '', checkInFrequency: '',
+}
+
+const GROUP_LABELS: Record<string, string> = {
+  'Group 1': 'Studies in Language & Literature',
+  'Group 2': 'Language Acquisition',
+  'Group 3': 'Individuals & Societies',
+  'Group 4': 'Sciences',
+  'Group 3/4': 'Sciences / Individuals & Societies',
+  'Group 5': 'Mathematics',
+  'Group 6': 'The Arts',
+}
+
+function SubjectsStep({ isDP, subjectList, subjects, subjectGoalGrades, onToggle, onSetLevel, onSetGoalGrade }: {
+  isDP: boolean
+  subjectList: { name: string; group: string; icon: string }[]
+  subjects: import('@/types').OnboardingSubject[]
+  subjectGoalGrades: Record<string, number>
+  onToggle: (name: string, group: string) => void
+  onSetLevel: (name: string, level: 'HL' | 'SL') => void
+  onSetGoalGrade: (name: string, grade: number) => void
+}) {
+  const [search, setSearch] = React.useState('')
+  const groups = [...new Set(subjectList.map(s => s.group))]
+  const filtered = subjectList.filter(s => s.name.toLowerCase().includes(search.toLowerCase()))
+
+  return (
+    <div>
+      <h2 className="text-3xl font-bold text-white mb-2">Select your subjects</h2>
+      <p className="text-slate-400 mb-3">{isDP ? 'Pick 3 HL and 3 SL subjects — set a target grade for each' : 'Select your MYP subject groups'}</p>
+      {isDP && (
+        <div className="flex gap-3 mb-3">
+          <span className="tag tag-purple">HL: {subjects.filter(s => s.level === 'HL').length}/3</span>
+          <span className="tag tag-cyan">SL: {subjects.filter(s => s.level === 'SL').length}/3</span>
+          <span className="tag" style={{ background: 'rgba(16,185,129,0.15)', color: '#34d399', border: '1px solid rgba(16,185,129,0.3)' }}>Selected: {subjects.length}/6</span>
+        </div>
+      )}
+      <input
+        value={search} onChange={e => setSearch(e.target.value)}
+        placeholder="Search subjects…"
+        className="input-dark w-full text-sm mb-4"
+      />
+      <div className="space-y-4 max-h-[380px] overflow-y-auto pr-1">
+        {(search ? [null] : groups).map(group => {
+          const list = search ? filtered : subjectList.filter(s => s.group === group)
+          if (!list.length) return null
+          return (
+            <div key={group ?? 'search'}>
+              {!search && <p className="text-xs font-bold tracking-widest uppercase mb-2 px-1" style={{ color: '#475569' }}>{GROUP_LABELS[group!] ?? group}</p>}
+              <div className="space-y-1.5">
+                {list.map(subject => {
+                  const sel = subjects.find(s => s.name === subject.name)
+                  const goalGrade = subjectGoalGrades[subject.name] ?? 6
+                  return (
+                    <div key={subject.name}
+                      className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer"
+                      style={{ background: sel ? 'rgba(124,58,237,0.1)' : '#161827', border: `1px solid ${sel ? '#7c3aed' : '#1e2a3a'}` }}
+                      onClick={() => onToggle(subject.name, subject.group)}>
+                      <span className="text-lg w-7 text-center flex-shrink-0">{subject.icon}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-white font-medium text-sm truncate">{subject.name}</p>
+                        <p className="text-xs" style={{ color: '#64748b' }}>{subject.group}</p>
+                      </div>
+                      {sel && (
+                        <div className="flex items-center gap-2 flex-shrink-0" onClick={e => e.stopPropagation()}>
+                          {isDP && (['HL', 'SL'] as const).map(lvl => (
+                            <button key={lvl} onClick={() => onSetLevel(subject.name, lvl)}
+                              className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
+                              style={{ background: sel.level === lvl ? '#7c3aed' : '#1e2a3a', color: sel.level === lvl ? 'white' : '#64748b', border: `1px solid ${sel.level === lvl ? '#7c3aed' : '#2d3748'}` }}>
+                              {lvl}
+                            </button>
+                          ))}
+                          {isDP && (
+                            <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#1e2a3a' }}>
+                              <span className="text-xs" style={{ color: '#64748b' }}>Target:</span>
+                              <select value={goalGrade}
+                                onChange={e => onSetGoalGrade(subject.name, Number(e.target.value))}
+                                style={{ background: 'none', border: 'none', outline: 'none', color: '#a78bfa', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
+                                {[7, 6, 5, 4, 3, 2, 1].map(g => <option key={g} value={g}>{g}</option>)}
+                              </select>
+                              <span className="text-xs" style={{ color: '#475569' }}>/7</span>
+                            </div>
+                          )}
+                          {!isDP && <Check className="w-4 h-4" style={{ color: '#7c3aed' }} />}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
 // Pill toggle helper
@@ -166,55 +261,15 @@ export default function OnboardingPage() {
 
             {/* ── STEP 1: Subjects ──────────────────────────────── */}
             {currentStepName === 'Subjects' && (
-              <div>
-                <h2 className="text-3xl font-bold text-white mb-2">Select your subjects</h2>
-                <p className="text-slate-400 mb-2">{isDP ? 'Pick 3 HL and 3 SL subjects — set a target grade for each' : 'Select your MYP subject groups'}</p>
-                {isDP && (
-                  <div className="flex gap-3 mb-4">
-                    <span className="tag tag-purple">HL: {data.subjects.filter(s => s.level === 'HL').length}/3</span>
-                    <span className="tag tag-cyan">SL: {data.subjects.filter(s => s.level === 'SL').length}/3</span>
-                  </div>
-                )}
-                <div className="space-y-2 max-h-[420px] overflow-y-auto pr-1">
-                  {subjectList.map(subject => {
-                    const sel = data.subjects.find(s => s.name === subject.name)
-                    const goalGrade = data.subjectGoalGrades[subject.name] ?? 6
-                    return (
-                      <div key={subject.name}
-                        className="flex items-center gap-3 p-3 rounded-xl transition-all duration-200 cursor-pointer"
-                        style={{ background: sel ? 'rgba(124,58,237,0.1)' : '#161827', border: `1px solid ${sel ? '#7c3aed' : '#1e2a3a'}` }}
-                        onClick={() => toggleSubject(subject.name, subject.group)}>
-                        <span className="text-xl w-8 text-center">{subject.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white font-medium text-sm truncate">{subject.name}</p>
-                          <p className="text-xs" style={{ color: '#64748b' }}>{subject.group}</p>
-                        </div>
-                        {sel && (
-                          <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                            {isDP && (['HL', 'SL'] as const).map(lvl => (
-                              <button key={lvl} onClick={() => setSubjectLevel(subject.name, lvl)}
-                                className="px-2.5 py-1 rounded-lg text-xs font-bold transition-all"
-                                style={{ background: sel.level === lvl ? '#7c3aed' : '#1e2a3a', color: sel.level === lvl ? 'white' : '#64748b', border: `1px solid ${sel.level === lvl ? '#7c3aed' : '#2d3748'}` }}>
-                                {lvl}
-                              </button>
-                            ))}
-                            <div className="flex items-center gap-1 px-2 py-1 rounded-lg" style={{ background: '#1e2a3a' }}>
-                              <span className="text-xs" style={{ color: '#64748b' }}>Target:</span>
-                              <select value={goalGrade}
-                                onChange={e => setData(d => ({ ...d, subjectGoalGrades: { ...d.subjectGoalGrades, [subject.name]: Number(e.target.value) } }))}
-                                style={{ background: 'none', border: 'none', outline: 'none', color: '#a78bfa', fontSize: '12px', fontWeight: 700, cursor: 'pointer' }}>
-                                {[7, 6, 5, 4, 3, 2, 1].map(g => <option key={g} value={g}>{g}</option>)}
-                              </select>
-                              <span className="text-xs" style={{ color: '#475569' }}>/7</span>
-                            </div>
-                          </div>
-                        )}
-                        {sel && !isDP && <Check className="w-4 h-4" style={{ color: '#7c3aed' }} />}
-                      </div>
-                    )
-                  })}
-                </div>
-              </div>
+              <SubjectsStep
+                isDP={isDP}
+                subjectList={subjectList}
+                subjects={data.subjects}
+                subjectGoalGrades={data.subjectGoalGrades}
+                onToggle={toggleSubject}
+                onSetLevel={setSubjectLevel}
+                onSetGoalGrade={(name, grade) => setData(d => ({ ...d, subjectGoalGrades: { ...d.subjectGoalGrades, [name]: grade } }))}
+              />
             )}
 
             {/* ── STEP 2: Goals ─────────────────────────────────── */}
