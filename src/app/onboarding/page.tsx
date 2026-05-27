@@ -196,9 +196,9 @@ export default function OnboardingPage() {
   const launch = async () => {
     setLaunching(true)
     setShowConfetti(true)
-    localStorage.setItem('ib_onboarding_complete', 'true')
     localStorage.setItem('ib_onboarding_data', JSON.stringify(data))
-    setTimeout(() => router.push('/dashboard'), 2500)
+    // Send to pricing — sign-in happens there after plan selection
+    setTimeout(() => router.push('/pricing'), 2500)
   }
 
   return (
@@ -791,9 +791,6 @@ export default function OnboardingPage() {
               className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium transition-all disabled:opacity-30"
               style={{ background: '#161827', border: '1px solid #1e2a3a', color: '#94a3b8' }}>
               <ChevronLeft className="w-4 h-4" /> Back
-            </button>
-            <button onClick={() => setStep(lastStep)} className="text-sm" style={{ color: '#475569' }}>
-              Skip all
             </button>
             <button onClick={next}
               className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold text-white transition-all btn-primary">
