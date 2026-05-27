@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import React, { useState, useEffect, useRef, useCallback } from 'react'
 import MainLayout from '@/components/layout/MainLayout'
 import Header from '@/components/layout/Header'
 import {
@@ -58,58 +58,238 @@ function formatTime(seconds: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`
 }
 
+function renderInline(text: string): React.ReactNode {
+  // Render **bold**, marks [N], and plain text
+  const parts = text.split(/(\*\*[^*]+\*\*|\[\d+\])/g)
+  return parts.map((part, i) => {
+    if (/^\*\*[^*]+\*\*$/.test(part)) return <strong key={i}>{part.slice(2, -2)}</strong>
+    if (/^\[\d+\]$/.test(part)) return (
+      <span key={i} className="inline-flex items-center justify-center ml-2 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#e0e7ff', color: '#4338ca', minWidth: 28 }}>{part}</span>
+    )
+    return <span key={i}>{part}</span>
+  })
+}
+
 function PaperRenderer({ content }: { content: string }) {
   const lines = content.split('\n')
-  return (
-    <div className="font-mono text-sm leading-relaxed" style={{ color: '#1a1a2e' }}>
-      {lines.map((line, i) => {
-        // Section dividers
-        if (line.startsWith('━')) return <hr key={i} className="my-3 border-0 border-t-2" style={{ borderColor: '#334155' }} />
-        if (line.startsWith('─')) return <hr key={i} className="my-2 border-0 border-t" style={{ borderColor: '#94a3b8', borderStyle: 'dashed' }} />
-        // Headers / SECTION labels
-        if (/^SECTION [A-Z]/.test(line)) return <div key={i} className="mt-8 mb-3 font-bold text-base tracking-wider" style={{ color: '#1e3a5f', borderBottom: '2px solid #334155', paddingBottom: '4px' }}>{line}</div>
-        if (/^IB DIPLOMA/.test(line)) return <div key={i} className="text-center font-bold text-lg tracking-widest mb-1" style={{ color: '#1e3a5f' }}>{line}</div>
-        if (/^INSTRUCTIONS/.test(line)) return <div key={i} className="font-bold text-sm mt-4 mb-1" style={{ color: '#334155' }}>{line}</div>
-        // Marks in brackets — highlight them
-        if (/\[\d+\]/.test(line)) {
-          const parts = line.split(/(\[\d+\])/g)
-          return (
-            <div key={i} className="mb-2">
-              {parts.map((part, j) =>
-                /^\[\d+\]$/.test(part)
-                  ? <span key={j} className="font-bold text-xs ml-1 px-1.5 py-0.5 rounded" style={{ background: '#e2e8f0', color: '#475569' }}>{part}</span>
-                  : <span key={j}>{part}</span>
-              )}
+  const elements: React.ReactNode[] = []
+  let i = 0
+  let inHeader = false
+  let headerLines: string[] = []
+
+  while (i < lines.length) {
+    const line = lines[i]
+    const trimmed = line.trim()
+
+    // ━━━ thick divider — start/end of header block
+    if (trimmed.startsWith('━')) {
+      if (!inHeader) {
+        inHeader = true
+        headerLines = []
+      } else {
+        // End of header — render the collected header block
+        inHeader = false
+        elements.push(
+          <div key={`hdr-${i}`} className="mb-8 pb-6" style={{ borderBottom: '3px solid #1e3a5f' }}>
+            {headerLines.map((hl, hi) => {
+              const ht = hl.trim()
+              if (!ht) return null
+              if (/^IB DIPLOMA/.test(ht)) return <div key={hi} className="text-xs font-bold tracking-[0.2em] uppercase mb-1" style={{ color: '#64748b' }}>{ht}</div>
+              if (/^INSTRUCTIONS TO/.test(ht)) return <div key={hi} className="text-xs font-bold tracking-widest uppercase mt-4 mb-2" style={{ color: '#334155' }}>{ht}</div>
+              if (ht.startsWith('•')) return <div key={hi} className="text-sm ml-3 mb-0.5 flex gap-2" style={{ color: '#475569' }}><span>•</span><span>{ht.slice(1).trim()}</span></div>
+              // Subject line (all caps, largest)
+              if (ht === ht.toUpperCase() && ht.length > 3 && !ht.startsWith('•') && !ht.includes('Do not') && !ht.includes('Write') && !ht.includes('Calculator') && !ht.includes('maximum') && !ht.includes('show') && !ht.includes('Where') && !ht.includes('Answer') && !/^\d/.test(ht)) {
+                return <div key={hi} className="text-2xl font-black tracking-tight mt-1 mb-0.5" style={{ color: '#0f172a' }}>{ht}</div>
+              }
+              return <div key={hi} className="text-sm mb-0.5" style={{ color: '#475569' }}>{ht}</div>
+            })}
+          </div>
+        )
+        headerLines = []
+      }
+      i++; continue
+    }
+
+    if (inHeader) { headerLines.push(line); i++; continue }
+
+    // ─── dashed divider (question separator)
+    if (trimmed.startsWith('─') || trimmed === '---') {
+      elements.push(<div key={`div-${i}`} className="my-5" style={{ borderTop: '1px dashed #cbd5e1' }} />)
+      i++; continue
+    }
+
+    // SECTION headers
+    if (/^#{1,3}\s/.test(trimmed)) {
+      const text = trimmed.replace(/^#+\s*/, '')
+      elements.push(
+        <div key={`sec-${i}`} className="mt-10 mb-4 flex items-center gap-3">
+          <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+          <span className="text-xs font-black tracking-[0.2em] uppercase px-3 py-1 rounded-full" style={{ background: '#1e3a5f', color: 'white' }}>{text}</span>
+          <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+        </div>
+      )
+      i++; continue
+    }
+    if (/^SECTION [A-Z]/.test(trimmed)) {
+      const parts = trimmed.match(/^(SECTION [A-Z])\s*[—–-]?\s*(.*)/)
+      const label = parts?.[1] ?? trimmed
+      const desc = parts?.[2] ?? ''
+      elements.push(
+        <div key={`sec-${i}`} className="mt-10 mb-4 flex items-center gap-3">
+          <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+          <div className="text-center px-4">
+            <span className="text-xs font-black tracking-[0.2em] uppercase px-3 py-1 rounded-full" style={{ background: '#1e3a5f', color: 'white' }}>{label}</span>
+            {desc && <div className="text-xs mt-1" style={{ color: '#64748b' }}>{desc}</div>}
+          </div>
+          <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+        </div>
+      )
+      i++; continue
+    }
+
+    // DIAGRAM placeholder
+    if (/^\[DIAGRAM:/i.test(trimmed)) {
+      const desc = trimmed.replace(/^\[DIAGRAM:\s*/i, '').replace(/\]$/, '')
+      elements.push(
+        <div key={`diag-${i}`} className="my-5 rounded-xl overflow-hidden" style={{ border: '1.5px dashed #94a3b8' }}>
+          <div className="px-4 py-2 text-xs font-bold tracking-widest uppercase" style={{ background: '#f1f5f9', color: '#64748b', borderBottom: '1px dashed #cbd5e1' }}>Diagram</div>
+          <div className="flex items-center justify-center p-8 text-sm text-center" style={{ background: '#f8fafc', color: '#94a3b8', minHeight: 100 }}>
+            <div>
+              <div className="text-2xl mb-2">📊</div>
+              <div className="italic">{desc}</div>
             </div>
-          )
-        }
-        // Diagram placeholders
-        if (/^\[DIAGRAM:/.test(line)) {
-          return (
-            <div key={i} className="my-3 p-4 rounded-lg border-2 border-dashed text-center text-xs" style={{ borderColor: '#94a3b8', background: '#f8fafc', color: '#64748b', minHeight: '80px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {line.slice(1, -1)}
-            </div>
-          )
-        }
-        // MCQ options
-        if (/^[A-D]\.\s/.test(line)) return <div key={i} className="ml-8 mb-1 text-sm" style={{ color: '#334155' }}>{line}</div>
-        // Answer lines
-        if (/^\.{5,}/.test(line)) return <div key={i} className="border-b my-1.5" style={{ borderColor: '#94a3b8', height: '20px', width: '100%' }} />
-        // Question numbers
-        if (/^\d+\./.test(line.trim()) || /^\((?:a|b|c|d|e|i|ii|iii)\)/.test(line.trim())) {
-          return <div key={i} className="font-semibold mt-3 mb-1" style={{ color: '#1e3a5f' }}>{line}</div>
-        }
-        // Bullet points
-        if (line.trim().startsWith('•') || line.trim().startsWith('–')) {
-          return <div key={i} className="ml-5 mb-1 text-sm" style={{ color: '#334155' }}>{line}</div>
-        }
-        // Empty lines
-        if (!line.trim()) return <div key={i} className="h-3" />
-        // Default
-        return <div key={i} className="mb-1 text-sm" style={{ color: '#334155' }}>{line}</div>
-      })}
-    </div>
-  )
+          </div>
+        </div>
+      )
+      i++; continue
+    }
+
+    // MCQ block: collect A B C D options
+    if (/^[A-D]\.\s/.test(trimmed)) {
+      const opts: string[] = []
+      while (i < lines.length && /^[A-D]\.\s/.test(lines[i].trim())) {
+        opts.push(lines[i].trim())
+        i++
+      }
+      elements.push(
+        <div key={`mcq-${i}`} className="grid grid-cols-1 gap-2 mt-3 mb-4 ml-6">
+          {opts.map((opt, oi) => {
+            const letter = opt[0]
+            const text = opt.slice(3)
+            return (
+              <div key={oi} className="flex items-start gap-3 px-4 py-2.5 rounded-lg" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
+                <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black" style={{ background: '#1e3a5f', color: 'white' }}>{letter}</span>
+                <span className="text-sm" style={{ color: '#1e293b' }}>{renderInline(text)}</span>
+              </div>
+            )
+          })}
+        </div>
+      )
+      continue
+    }
+
+    // Answer lines (dots)
+    if (/^\.{5,}/.test(trimmed)) {
+      const count = (trimmed.match(/\.\./g) || []).length
+      const lineCount = Math.max(1, Math.round(count / 20))
+      elements.push(
+        <div key={`ans-${i}`} className="my-3 ml-6 space-y-3">
+          {Array.from({ length: lineCount }).map((_, li) => (
+            <div key={li} className="h-px" style={{ background: '#94a3b8' }} />
+          ))}
+        </div>
+      )
+      i++; continue
+    }
+
+    // Numbered question: **1.** or 1. at line start
+    const qMatch = trimmed.match(/^\*?\*?(\d+)\.\*?\*?\s+(.*)/)
+    if (qMatch && !trimmed.startsWith('  ')) {
+      const num = qMatch[1]
+      const rest = qMatch[2]
+      elements.push(
+        <div key={`q-${i}`} className="flex gap-4 mt-8 mb-2">
+          <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm" style={{ background: '#1e3a5f', color: 'white' }}>{num}</div>
+          <div className="flex-1 pt-1 text-sm font-medium leading-relaxed" style={{ color: '#0f172a' }}>{renderInline(rest)}</div>
+        </div>
+      )
+      i++; continue
+    }
+
+    // Sub-question: (a), (b), (i), (ii)
+    const subMatch = trimmed.match(/^\(((?:[a-e]|i{1,3}|iv|v|vi))\)\s+(.*)/)
+    if (subMatch) {
+      elements.push(
+        <div key={`sub-${i}`} className="flex gap-3 ml-8 mt-4 mb-1">
+          <span className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs font-bold" style={{ background: '#e0e7ff', color: '#4338ca' }}>({subMatch[1]})</span>
+          <div className="flex-1 text-sm leading-relaxed" style={{ color: '#1e293b' }}>{renderInline(subMatch[2])}</div>
+        </div>
+      )
+      i++; continue
+    }
+
+    // Bullet points
+    if (trimmed.startsWith('•') || trimmed.startsWith('–') || trimmed.startsWith('-')) {
+      const text = trimmed.replace(/^[•–-]\s*/, '')
+      elements.push(
+        <div key={`bul-${i}`} className="flex gap-2 ml-10 mb-1 text-sm" style={{ color: '#334155' }}>
+          <span style={{ color: '#94a3b8' }}>•</span>
+          <span>{renderInline(text)}</span>
+        </div>
+      )
+      i++; continue
+    }
+
+    // Table rows (markdown)
+    if (trimmed.startsWith('|')) {
+      const tableLines: string[] = []
+      while (i < lines.length && lines[i].trim().startsWith('|')) {
+        tableLines.push(lines[i].trim())
+        i++
+      }
+      const rows = tableLines.filter(r => !/^\|[-| ]+\|$/.test(r))
+      elements.push(
+        <div key={`tbl-${i}`} className="my-4 overflow-x-auto ml-6">
+          <table className="text-sm border-collapse w-full">
+            {rows.map((row, ri) => {
+              const cells = row.split('|').filter(Boolean).map(c => c.trim())
+              return (
+                <tr key={ri} style={{ background: ri === 0 ? '#f1f5f9' : ri % 2 === 0 ? '#f8fafc' : 'white' }}>
+                  {cells.map((cell, ci) => (
+                    <td key={ci} className={`px-3 py-2 ${ri === 0 ? 'font-bold' : ''}`} style={{ border: '1px solid #e2e8f0', color: '#1e293b' }}>{renderInline(cell)}</td>
+                  ))}
+                </tr>
+              )
+            })}
+          </table>
+        </div>
+      )
+      continue
+    }
+
+    // Bold-only line (section label or note)
+    if (/^\*\*[^*]+\*\*$/.test(trimmed)) {
+      elements.push(<div key={`bold-${i}`} className="font-bold text-sm mt-4 mb-1" style={{ color: '#1e3a5f' }}>{trimmed.slice(2, -2)}</div>)
+      i++; continue
+    }
+
+    // NOTE TO CANDIDATES etc.
+    if (/^NOTE TO|^End of|^Total:/.test(trimmed)) {
+      elements.push(
+        <div key={`note-${i}`} className="mt-8 p-3 rounded-lg text-xs font-medium text-center" style={{ background: '#f1f5f9', color: '#475569' }}>{trimmed}</div>
+      )
+      i++; continue
+    }
+
+    // Empty line
+    if (!trimmed) { elements.push(<div key={`sp-${i}`} className="h-2" />); i++; continue }
+
+    // Default paragraph
+    elements.push(<p key={`p-${i}`} className="text-sm leading-relaxed mb-1 ml-2" style={{ color: '#334155' }}>{renderInline(trimmed)}</p>)
+    i++
+  }
+
+  return <div className="space-y-0">{elements}</div>
 }
 
 export default function PracticeTestsPage() {
