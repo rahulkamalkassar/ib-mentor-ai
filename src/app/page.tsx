@@ -1,6 +1,5 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Logo } from '@/components/ui/Logo'
 import { ArrowRight, Sparkles, BarChart3, Brain, ClipboardList, Calendar, GraduationCap, Zap, Star } from 'lucide-react'
@@ -28,28 +27,6 @@ const TESTIMONIALS = [
 
 export default function Home() {
   const router = useRouter()
-  const [checked, setChecked] = useState(false)
-
-  useEffect(() => {
-    const done = localStorage.getItem('ib_onboarding_complete')
-    if (done === 'true') {
-      router.push('/dashboard')
-    } else {
-      setChecked(true)
-    }
-  }, [router])
-
-  if (!checked) {
-    return (
-      <div className="flex items-center justify-center min-h-screen" style={{ background: '#0d0f1a' }}>
-        <div className="flex gap-1">
-          {[0,1,2].map(i => (
-            <div key={i} className="w-2 h-2 rounded-full animate-bounce" style={{ background: '#7c3aed', animationDelay: `${i * 0.15}s` }} />
-          ))}
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div style={{ minHeight: '100vh', background: '#0d0f1a', color: 'white', overflowX: 'hidden' }}>
