@@ -36,87 +36,100 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
   return (
     <header
       className="flex items-center justify-between px-7"
-      style={{ height: '60px', borderBottom: '1px solid rgba(255,255,255,0.06)', background: 'var(--bg-primary)' }}
+      style={{
+        height: '60px',
+        borderBottom: '1px solid var(--color-hairline)',
+        background: 'var(--color-canvas)',
+        boxShadow: 'rgba(0,55,112,0.06) 0 1px 3px',
+      }}
     >
       <div className="flex items-baseline gap-3">
-        <h1 className="text-[15px] font-semibold text-white">{title}</h1>
-        {subtitle && <span className="text-xs" style={{ color: 'var(--text-muted)' }}>{subtitle}</span>}
+        <h1 style={{ fontSize: '15px', fontWeight: 400, color: 'var(--color-ink)', letterSpacing: '-0.15px' }}>{title}</h1>
+        {subtitle && (
+          <span style={{ fontSize: '12px', color: 'var(--color-ink-mute)', fontWeight: 300 }}>{subtitle}</span>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
         {actions}
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'var(--text-muted)' }} />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5" style={{ color: 'var(--color-ink-mute)' }} />
           <input
             type="text"
             placeholder="Search..."
             className="input-dark"
-            style={{ paddingLeft: '34px', height: '32px', width: '180px', borderRadius: '8px', fontSize: '13px' }}
+            style={{ paddingLeft: '34px', height: '32px', width: '180px', borderRadius: '9999px', fontSize: '13px' }}
           />
         </div>
+
         <button
-          className="relative w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-          style={{ border: '1px solid rgba(255,255,255,0.07)' }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-          onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+          className="relative w-8 h-8 rounded-full flex items-center justify-center transition-colors"
+          style={{ border: '1px solid var(--color-hairline)', background: 'var(--color-canvas)' }}
+          onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-canvas-soft)')}
+          onMouseLeave={e => (e.currentTarget.style.background = 'var(--color-canvas)')}
         >
-          <Bell className="w-4 h-4" style={{ color: 'var(--text-secondary)' }} />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: '#7c3aed' }} />
+          <Bell className="w-4 h-4" style={{ color: 'var(--color-ink-mute)' }} />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full" style={{ background: 'var(--color-primary)' }} />
         </button>
 
         {/* Avatar + dropdown */}
         <div ref={menuRef} style={{ position: 'relative' }}>
           <button
             onClick={() => setMenuOpen(v => !v)}
-            style={{ width: 32, height: 32, borderRadius: '8px', overflow: 'hidden', border: '2px solid rgba(124,58,237,0.4)', cursor: 'pointer', padding: 0, background: 'none', flexShrink: 0 }}
+            style={{ width: 32, height: 32, borderRadius: '50%', overflow: 'hidden', border: '2px solid var(--color-primary)', cursor: 'pointer', padding: 0, background: 'none', flexShrink: 0 }}
           >
             {avatarUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={avatarUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 700, color: 'white' }}>
+              <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #533afd, #4434d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: 400, color: 'white' }}>
                 {initials}
               </div>
             )}
           </button>
 
           {menuOpen && (
-            <div style={{ position: 'absolute', top: '40px', right: 0, width: '220px', background: '#161827', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', boxShadow: '0 16px 48px rgba(0,0,0,0.5)', zIndex: 100, overflow: 'hidden' }}>
-              {/* User info */}
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+            <div style={{
+              position: 'absolute', top: '40px', right: 0, width: '220px',
+              background: 'var(--color-canvas)',
+              border: '1px solid var(--color-hairline)',
+              borderRadius: '12px',
+              boxShadow: 'rgba(0,55,112,0.1) 0 8px 24px, rgba(0,55,112,0.05) 0 2px 6px',
+              zIndex: 100, overflow: 'hidden',
+            }}>
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--color-hairline)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   {avatarUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={avatarUrl} alt={name} style={{ width: 36, height: 36, borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }} />
+                    <img src={avatarUrl} alt={name} style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                   ) : (
-                    <div style={{ width: 36, height: 36, borderRadius: '8px', background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 700, color: 'white', flexShrink: 0 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #533afd, #4434d4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 400, color: 'white', flexShrink: 0 }}>
                       {initials}
                     </div>
                   )}
                   <div style={{ minWidth: 0 }}>
-                    <p style={{ fontSize: '13px', fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
-                    <p style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session?.user?.email}</p>
+                    <p style={{ fontSize: '13px', fontWeight: 400, color: 'var(--color-ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
+                    <p style={{ fontSize: '11px', color: 'var(--color-ink-mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session?.user?.email}</p>
                   </div>
                 </div>
               </div>
 
-              {/* Menu items */}
               <div style={{ padding: '6px' }}>
                 <button
                   onClick={() => { setMenuOpen(false); router.push('/settings') }}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', borderRadius: '8px', background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '13px', textAlign: 'left' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.04)')}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', borderRadius: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-ink-mute)', fontSize: '13px', fontWeight: 300, textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--color-canvas-soft)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
-                  <User style={{ width: 15, height: 15 }} /> Account Settings
+                  <User style={{ width: 14, height: 14 }} /> Account Settings
                 </button>
                 <button
                   onClick={signOut}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', borderRadius: '8px', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', fontSize: '13px', textAlign: 'left' }}
-                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,0.08)')}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '10px', padding: '9px 10px', borderRadius: '6px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-ruby)', fontSize: '13px', fontWeight: 300, textAlign: 'left' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(234,34,97,0.06)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'none')}
                 >
-                  <LogOut style={{ width: 15, height: 15 }} /> Sign out
+                  <LogOut style={{ width: 14, height: 14 }} /> Sign out
                 </button>
               </div>
             </div>

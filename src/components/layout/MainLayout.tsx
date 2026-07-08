@@ -9,7 +9,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname()
 
   return (
-    <div className="flex min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="flex min-h-screen" style={{ background: 'var(--color-canvas-soft)' }}>
       <Sidebar />
       <main style={{ marginLeft: 'var(--sidebar-width)', minHeight: '100vh', flex: 1 }}>
         <AnimatePresence mode="wait" initial={false}>

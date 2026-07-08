@@ -82,7 +82,7 @@ export default function SubjectsPage() {
               <button
                 onClick={() => router.push('/onboarding')}
                 className="flex items-center gap-2 text-sm px-4 py-2 rounded-lg transition-colors"
-                style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', color: 'var(--text-secondary)' }}
+                style={{ background: 'var(--color-canvas)', border: '1px solid var(--color-hairline)', color: 'var(--color-ink-mute)', fontWeight: 300 }}
               >
                 <Plus className="w-4 h-4" /> Add Subject
               </button>
@@ -127,7 +127,7 @@ export default function SubjectsPage() {
                           <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: accent }} />
                         </div>
                       </div>
-                      <h3 className="font-semibold text-white mb-1 text-sm leading-snug">{subject.name}</h3>
+                      <h3 className="mb-1 text-sm leading-snug" style={{ fontWeight: 400, color: '#0d253d' }}>{subject.name}</h3>
                       <p className="text-xs mb-3" style={{ color: 'var(--text-muted)' }}>{subject.group}</p>
                       {weakCount > 0 && (
                         <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ export default function SubjectsPage() {
             <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5" style={{ background: 'var(--accent-purple-dim)', border: '1px solid rgba(124,58,237,0.2)' }}>
               <BookOpen className="w-8 h-8" style={{ color: 'var(--accent-purple)' }} />
             </div>
-            <h3 className="text-xl font-bold text-white mb-2">No subjects yet</h3>
+            <h3 className="text-xl mb-2" style={{ fontWeight: 300, color: '#0d253d', letterSpacing: '-0.22px' }}>No subjects yet</h3>
             <p className="text-sm text-center max-w-xs mb-6" style={{ color: 'var(--text-muted)' }}>
               Complete the setup quiz to add your IB subjects
             </p>

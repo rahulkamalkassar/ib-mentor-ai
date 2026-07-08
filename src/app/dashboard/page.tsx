@@ -26,13 +26,13 @@ interface CalendarEvent {
 }
 
 const TYPE_COLOR: Record<string, string> = {
-  exam: '#ef4444',
-  IA: '#f59e0b',
+  exam: '#ea2261',
+  IA: '#9b6829',
   mock: '#f97316',
-  summative: '#7c3aed',
+  summative: '#533afd',
   homework: '#06b6d4',
   revision: '#10b981',
-  other: '#64748b',
+  other: '#64748d',
 }
 
 const ASSESSMENT_TYPES = new Set(['exam', 'IA', 'summative', 'mock', 'oral'])
@@ -111,15 +111,15 @@ function StatCard({ label, value, sub, icon: Icon, iconBg, iconColor, animate: s
   animate?: boolean;
 }) {
   return (
-    <div className="card" style={{ padding: '28px 20px', textAlign: 'center' }}>
-      <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-        <Icon style={{ width: '20px', height: '20px', color: iconColor }} />
+    <div className="card" style={{ padding: '24px 20px', textAlign: 'center' }}>
+      <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+        <Icon style={{ width: '18px', height: '18px', color: iconColor }} />
       </div>
-      <p className="heading-display" style={{ fontSize: '46px', fontWeight: 700, color: '#fff', lineHeight: 1 }}>
+      <p className="tabular" style={{ fontSize: '40px', fontWeight: 300, color: '#0d253d', lineHeight: 1, letterSpacing: '-0.96px' }}>
         {(shouldAnimate && typeof value === 'number') ? <AnimatedNumber target={value} /> : value}
       </p>
-      <p style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-primary)', margin: '10px 0 3px' }}>{label}</p>
-      <p style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{sub}</p>
+      <p style={{ fontSize: '12px', fontWeight: 400, color: '#273951', margin: '10px 0 3px' }}>{label}</p>
+      <p style={{ fontSize: '11px', color: '#64748d', fontWeight: 300 }}>{sub}</p>
     </div>
   )
 }
@@ -202,29 +202,31 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.22 }}
           style={{
-            background: 'var(--bg-elevated)',
-            border: '1px solid rgba(124,58,237,0.18)',
-            borderRadius: '14px',
-            padding: '24px 28px',
+            background: '#ffffff',
+            border: '1px solid #e3e8ee',
+            borderRadius: '12px',
+            padding: '28px 32px',
             position: 'relative',
             overflow: 'hidden',
+            boxShadow: 'rgba(0,55,112,0.08) 0 1px 3px',
           }}
         >
-          <div style={{ position: 'absolute', inset: 0, opacity: 0.12, backgroundImage: 'radial-gradient(ellipse at 80% 50%, #7c3aed 0%, transparent 60%)' }} />
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          {/* Subtle indigo glow */}
+          <div style={{ position: 'absolute', top: 0, right: 0, width: '280px', height: '100%', background: 'radial-gradient(ellipse at 100% 50%, rgba(83,58,253,0.06) 0%, transparent 70%)', pointerEvents: 'none' }} />
+          <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '24px' }}>
             <div>
-              <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 600 }}>
+              <p style={{ fontSize: '11px', color: '#64748d', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 400 }}>
                 {userData?.programme || 'IB Diploma Programme'} · {userData?.examProximity || '3–6 months'} to exams
               </p>
-              <h2 className="heading-display" style={{ fontSize: '24px', fontWeight: 700, color: '#fff', lineHeight: 1.25, marginBottom: '4px' }}>
+              <h2 style={{ fontSize: '26px', fontWeight: 300, color: '#0d253d', lineHeight: 1.12, marginBottom: '6px', letterSpacing: '-0.26px' }}>
                 {greeting}{firstName ? `, ${firstName}` : ''}
               </h2>
-              <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '18px' }}>
+              <p style={{ fontSize: '14px', color: '#64748d', marginBottom: '20px', fontWeight: 300 }}>
                 {heroSubtext}
               </p>
               <button
                 className="btn-primary"
-                style={{ gap: '8px', fontSize: '13px' }}
+                style={{ gap: '8px', fontSize: '14px' }}
                 onClick={() => document.querySelector<HTMLButtonElement>('[data-ai-trigger]')?.click()}
               >
                 <MessageCircle style={{ width: '14px', height: '14px' }} />
@@ -234,21 +236,28 @@ export default function DashboardPage() {
             <div style={{ display: 'flex', gap: '10px', flexShrink: 0 }}>
               <Link href="/ee-helper" style={{ textDecoration: 'none' }}>
                 <div style={{
-                  background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)',
-                  borderRadius: '10px', padding: '12px 16px', textAlign: 'center', cursor: 'pointer',
+                  background: 'rgba(83,58,253,0.06)', border: '1px solid rgba(83,58,253,0.15)',
+                  borderRadius: '10px', padding: '12px 18px', textAlign: 'center', cursor: 'pointer',
                   transition: 'background 0.15s',
-                }}>
-                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#c4b5fd' }}>EE Helper</p>
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Essay support</p>
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(83,58,253,0.1)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(83,58,253,0.06)')}
+                >
+                  <p style={{ fontSize: '12px', fontWeight: 400, color: '#533afd' }}>EE Helper</p>
+                  <p style={{ fontSize: '11px', color: '#64748d', marginTop: '2px', fontWeight: 300 }}>Essay support</p>
                 </div>
               </Link>
               <Link href="/tok-teacher" style={{ textDecoration: 'none' }}>
                 <div style={{
-                  background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.15)',
-                  borderRadius: '10px', padding: '12px 16px', textAlign: 'center', cursor: 'pointer',
-                }}>
-                  <p style={{ fontSize: '12px', fontWeight: 600, color: '#6ee7b7' }}>TOK Teacher</p>
-                  <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>Theory of Knowledge</p>
+                  background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)',
+                  borderRadius: '10px', padding: '12px 18px', textAlign: 'center', cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={e => (e.currentTarget.style.background = 'rgba(16,185,129,0.1)')}
+                onMouseLeave={e => (e.currentTarget.style.background = 'rgba(16,185,129,0.06)')}
+                >
+                  <p style={{ fontSize: '12px', fontWeight: 400, color: '#065f46' }}>TOK Teacher</p>
+                  <p style={{ fontSize: '11px', color: '#64748d', marginTop: '2px', fontWeight: 300 }}>Theory of Knowledge</p>
                 </div>
               </Link>
             </div>
@@ -267,28 +276,28 @@ export default function DashboardPage() {
               label: usingGoals ? 'Target Score' : 'Predicted Score',
               value: subjects.length ? totalLikely : '--',
               sub: subjects.length ? `out of ${maxPoints}` : 'Add subjects to track',
-              icon: TrendingUp, iconBg: 'var(--accent-purple-dim)', iconColor: '#a78bfa',
+              icon: TrendingUp, iconBg: 'rgba(83,58,253,0.08)', iconColor: '#533afd',
               animate: !!subjects.length,
             },
             {
               label: 'Subjects',
               value: subjects.length || 0,
               sub: subjects.length ? 'HL & SL combined' : 'Complete onboarding',
-              icon: BookOpen, iconBg: 'rgba(6,182,212,0.12)', iconColor: '#67e8f9',
+              icon: BookOpen, iconBg: 'rgba(6,182,212,0.08)', iconColor: '#0e7490',
               animate: true,
             },
             {
               label: 'Tasks Today',
               value: todayTasks.length,
               sub: todayTasks.length === 0 ? 'Nothing scheduled' : `${todayTasks.filter(t => !doneTasks.has(t.id)).length} remaining`,
-              icon: Calendar, iconBg: 'rgba(239,68,68,0.1)', iconColor: '#f87171',
+              icon: Calendar, iconBg: 'rgba(234,34,97,0.08)', iconColor: '#ea2261',
               animate: true,
             },
             {
               label: 'Study Streak',
               value: streak,
               sub: streak === 1 ? 'Day 1 — keep going' : `${streak} days in a row`,
-              icon: Flame, iconBg: 'rgba(245,158,11,0.1)', iconColor: '#fbbf24',
+              icon: Flame, iconBg: 'rgba(155,104,41,0.1)', iconColor: '#9b6829',
               animate: true,
             },
           ].map(card => (
@@ -310,8 +319,8 @@ export default function DashboardPage() {
             transition={{ duration: 0.22, delay: 0.18 }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px' }}>
-              <h2 style={{ fontWeight: 600, color: '#fff', fontSize: '14px' }}>My Subjects</h2>
-              <Link href="/subjects" style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '12px', color: 'var(--accent-purple)', textDecoration: 'none' }}>
+              <h2 style={{ fontWeight: 400, color: '#0d253d', fontSize: '14px' }}>My Subjects</h2>
+              <Link href="/subjects" style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '12px', color: '#533afd', textDecoration: 'none', fontWeight: 300 }}>
                 View all <ArrowRight style={{ width: '11px', height: '11px' }} />
               </Link>
             </div>
@@ -332,8 +341,8 @@ export default function DashboardPage() {
                         <div
                           className="card-hover"
                           style={{
-                            background: 'rgba(255,255,255,0.02)',
-                            border: '1px solid var(--border-subtle)',
+                            background: '#ffffff',
+                            border: '1px solid #e3e8ee',
                             borderLeft: `3px solid ${accent}`,
                             borderRadius: '10px',
                             padding: '12px',
@@ -342,16 +351,16 @@ export default function DashboardPage() {
                         >
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <p style={{ fontWeight: 600, color: '#fff', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                              <p style={{ fontWeight: 400, color: '#0d253d', fontSize: '12px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {subject.name.split(':')[0].trim()}
                               </p>
-                              <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                              <p style={{ fontSize: '10px', color: '#64748d', marginTop: '2px', fontWeight: 300 }}>
                                 {subject.level} · {subject.group}
                               </p>
                             </div>
                             {grade !== null && (
-                              <p style={{ fontWeight: 700, fontSize: '17px', color: gradeColor(grade), flexShrink: 0 }}>
-                                {grade}<span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: 400 }}>/7</span>
+                              <p className="tabular" style={{ fontWeight: 300, fontSize: '17px', color: gradeColor(grade), flexShrink: 0 }}>
+                                {grade}<span style={{ fontSize: '10px', color: '#64748d', fontWeight: 300 }}>/7</span>
                               </p>
                             )}
                           </div>
@@ -373,11 +382,11 @@ export default function DashboardPage() {
               </motion.div>
             ) : (
               <div style={{ textAlign: 'center', padding: '40px 0' }}>
-                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'var(--accent-purple-dim)', border: '1px solid rgba(124,58,237,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                  <BookOpen style={{ width: '20px', height: '20px', color: 'var(--accent-purple)' }} />
+                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(83,58,253,0.08)', border: '1px solid rgba(83,58,253,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+                  <BookOpen style={{ width: '20px', height: '20px', color: '#533afd' }} />
                 </div>
-                <p style={{ fontWeight: 600, color: '#fff', marginBottom: '5px' }}>No subjects yet</p>
-                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '18px' }}>Complete onboarding to add your subjects</p>
+                <p style={{ fontWeight: 400, color: '#0d253d', marginBottom: '5px' }}>No subjects yet</p>
+                <p style={{ fontSize: '13px', color: '#64748d', marginBottom: '18px', fontWeight: 300 }}>Complete onboarding to add your subjects</p>
                 <Link href="/onboarding">
                   <button className="btn-primary" style={{ fontSize: '13px' }}>Set up subjects</button>
                 </Link>
@@ -397,23 +406,23 @@ export default function DashboardPage() {
             <div className="card" style={{ padding: '18px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <CheckSquare style={{ width: 13, height: 13, color: '#a78bfa' }} />
-                  <h3 style={{ fontWeight: 600, color: '#fff', fontSize: '12px' }}>Today&apos;s Tasks</h3>
+                  <CheckSquare style={{ width: 13, height: 13, color: '#533afd' }} />
+                  <h3 style={{ fontWeight: 400, color: '#0d253d', fontSize: '12px' }}>Today&apos;s Tasks</h3>
                   {todayTasks.length > 0 && (
-                    <span style={{ fontSize: '10px', fontWeight: 700, background: 'var(--accent-purple-dim)', color: '#c4b5fd', padding: '1px 6px', borderRadius: 99 }}>
+                    <span className="pill-tag-soft" style={{ fontSize: '10px' }}>
                       {todayTasks.filter(t => !doneTasks.has(t.id)).length} left
                     </span>
                   )}
                 </div>
-                <Link href="/calendar" style={{ fontSize: '11px', color: 'var(--accent-purple)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <Link href="/calendar" style={{ fontSize: '11px', color: '#533afd', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 3, fontWeight: 300 }}>
                   <Plus style={{ width: 10, height: 10 }} />Add
                 </Link>
               </div>
 
               {todayTasks.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                  <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: 6 }}>Nothing scheduled for today</p>
-                  <Link href="/calendar" style={{ fontSize: '11px', color: 'var(--accent-purple)', textDecoration: 'none' }}>
+                  <p style={{ fontSize: '12px', color: '#64748d', marginBottom: 6, fontWeight: 300 }}>Nothing scheduled for today</p>
+                  <Link href="/calendar" style={{ fontSize: '11px', color: '#533afd', textDecoration: 'none', fontWeight: 300 }}>
                     Add to calendar →
                   </Link>
                 </div>
@@ -428,24 +437,24 @@ export default function DashboardPage() {
                         onClick={() => toggleDone(task.id)}
                         style={{
                           display: 'flex', alignItems: 'flex-start', gap: '8px',
-                          padding: '8px 9px', borderRadius: 9, cursor: 'pointer',
-                          background: done ? 'rgba(255,255,255,0.02)' : 'var(--accent-purple-dim)',
-                          border: `1px solid ${done ? 'var(--border-subtle)' : 'rgba(124,58,237,0.15)'}`,
+                          padding: '8px 9px', borderRadius: 8, cursor: 'pointer',
+                          background: done ? '#f6f9fc' : 'rgba(83,58,253,0.05)',
+                          border: `1px solid ${done ? '#e3e8ee' : 'rgba(83,58,253,0.12)'}`,
                           transition: 'all 0.15s',
-                          opacity: done ? 0.5 : 1,
+                          opacity: done ? 0.55 : 1,
                         }}
                       >
                         {done
                           ? <CheckSquare style={{ width: 14, height: 14, color: '#10b981', flexShrink: 0, marginTop: 1 }} />
-                          : <Square style={{ width: 14, height: 14, color: 'var(--text-muted)', flexShrink: 0, marginTop: 1 }} />
+                          : <Square style={{ width: 14, height: 14, color: '#64748d', flexShrink: 0, marginTop: 1 }} />
                         }
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: '12px', fontWeight: 500, color: done ? 'var(--text-muted)' : '#fff', textDecoration: done ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          <p style={{ fontSize: '12px', fontWeight: 300, color: done ? '#64748d' : '#0d253d', textDecoration: done ? 'line-through' : 'none', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                             {task.title}
                           </p>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
-                            <span style={{ fontSize: '10px', fontWeight: 600, color }}>{task.type}</span>
-                            {task.time && <span style={{ fontSize: '10px', color: 'var(--text-muted)' }}>· {task.time}</span>}
+                            <span style={{ fontSize: '10px', fontWeight: 400, color }}>{task.type}</span>
+                            {task.time && <span style={{ fontSize: '10px', color: '#64748d', fontWeight: 300 }}>· {task.time}</span>}
                           </div>
                         </div>
                       </div>
@@ -459,8 +468,8 @@ export default function DashboardPage() {
             {upcomingEvents.length > 0 && (
               <div className="card" style={{ padding: '18px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-                  <h3 style={{ fontWeight: 600, color: '#fff', fontSize: '12px' }}>Coming Up</h3>
-                  <Link href="/calendar" style={{ fontSize: '11px', color: 'var(--accent-purple)', textDecoration: 'none' }}>Calendar</Link>
+                  <h3 style={{ fontWeight: 400, color: '#0d253d', fontSize: '12px' }}>Coming Up</h3>
+                  <Link href="/calendar" style={{ fontSize: '11px', color: '#533afd', textDecoration: 'none', fontWeight: 300 }}>Calendar</Link>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
                   {upcomingEvents.map(e => {
@@ -469,8 +478,8 @@ export default function DashboardPage() {
                       <div key={e.id} style={{ display: 'flex', gap: '9px', alignItems: 'flex-start' }}>
                         <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: color, marginTop: '6px', flexShrink: 0 }} />
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <p style={{ fontSize: '12px', fontWeight: 500, color: '#fff', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</p>
-                          <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '1px' }}>{formatUpcomingDate(e.date)}</p>
+                          <p style={{ fontSize: '12px', fontWeight: 300, color: '#0d253d', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{e.title}</p>
+                          <p style={{ fontSize: '10px', color: '#64748d', marginTop: '1px', fontWeight: 300 }}>{formatUpcomingDate(e.date)}</p>
                         </div>
                       </div>
                     )
@@ -481,21 +490,21 @@ export default function DashboardPage() {
 
             {/* Quick actions */}
             <div className="card" style={{ padding: '18px' }}>
-              <h3 style={{ fontWeight: 600, color: '#fff', fontSize: '12px', marginBottom: '10px' }}>Quick Access</h3>
+              <h3 style={{ fontWeight: 400, color: '#0d253d', fontSize: '12px', marginBottom: '10px' }}>Quick Access</h3>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                 {[
-                  { href: '/practice-tests', icon: ClipboardList, label: 'Practice Tests',   color: '#a78bfa' },
-                  { href: '/ee-helper',      icon: Target,         label: 'EE Helper',        color: '#67e8f9' },
-                  { href: '/tok-teacher',    icon: Clock,          label: 'TOK Teacher',      color: '#34d399' },
-                  { href: '/grades',         icon: TrendingUp,     label: 'Grade Tracker',    color: '#fbbf24' },
+                  { href: '/practice-tests', icon: ClipboardList, label: 'Practice Tests',   color: '#533afd' },
+                  { href: '/ee-helper',      icon: Target,         label: 'EE Helper',        color: '#4434d4' },
+                  { href: '/tok-teacher',    icon: Clock,          label: 'TOK Teacher',      color: '#10b981' },
+                  { href: '/grades',         icon: TrendingUp,     label: 'Grade Tracker',    color: '#9b6829' },
                 ].map(({ href, icon: Icon, label, color }) => (
                   <Link key={href} href={href} style={{ textDecoration: 'none' }}>
                     <button
                       className="btn-ghost"
-                      style={{ width: '100%', justifyContent: 'flex-start', gap: '9px', padding: '8px 9px', borderRadius: '7px' }}
+                      style={{ width: '100%', justifyContent: 'flex-start', gap: '9px', padding: '8px 9px', borderRadius: '6px' }}
                     >
                       <Icon style={{ width: '13px', height: '13px', color, flexShrink: 0 }} />
-                      <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>{label}</span>
+                      <span style={{ fontSize: '12px', color: '#273951', fontWeight: 300 }}>{label}</span>
                     </button>
                   </Link>
                 ))}
@@ -506,8 +515,8 @@ export default function DashboardPage() {
             {userData?.weakTopics && Object.keys(userData.weakTopics).length > 0 && (
               <div className="card" style={{ padding: '18px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginBottom: '10px' }}>
-                  <AlertTriangle style={{ width: '13px', height: '13px', color: '#f59e0b' }} />
-                  <h3 style={{ fontWeight: 600, color: '#fff', fontSize: '12px' }}>Priority Areas</h3>
+                  <AlertTriangle style={{ width: '13px', height: '13px', color: '#9b6829' }} />
+                  <h3 style={{ fontWeight: 400, color: '#0d253d', fontSize: '12px' }}>Priority Areas</h3>
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '9px' }}>
                   {subjects.slice(0, 3).map(subject => {
@@ -515,7 +524,7 @@ export default function DashboardPage() {
                     if (!topics.length) return null
                     return (
                       <div key={subject.name}>
-                        <p style={{ fontSize: '10px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>
+                        <p style={{ fontSize: '10px', fontWeight: 400, color: '#273951', marginBottom: '4px' }}>
                           {subject.name.split(':')[0]}
                         </p>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>

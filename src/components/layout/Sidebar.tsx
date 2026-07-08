@@ -38,12 +38,18 @@ function NavLink({ href, label, icon: Icon, isPro }: { href: string; label: stri
     return (
       <Link
         href={href}
-        className="flex items-center gap-3 px-3 rounded-lg font-semibold transition-all duration-150 hover:bg-purple-500/10"
-        style={{ color: '#a78bfa', fontSize: '14px', padding: '10px 12px' }}
+        className="flex items-center gap-3 rounded-lg transition-all duration-150"
+        style={{
+          color: '#b9b9f9',
+          fontSize: '13.5px',
+          fontWeight: 300,
+          padding: '9px 12px',
+          background: 'rgba(185,185,249,0.1)',
+        }}
       >
-        <Icon className="w-[18px] h-[18px] flex-shrink-0" style={{ color: '#a78bfa' }} />
+        <Icon className="w-[17px] h-[17px] flex-shrink-0" style={{ color: '#b9b9f9' }} />
         <span>{label}</span>
-        <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: 'rgba(124,58,237,0.25)', color: '#c4b5fd' }}>PRO</span>
+        <span className="ml-auto text-[9px] px-1.5 py-0.5 rounded-full font-medium" style={{ background: 'rgba(83,58,253,0.4)', color: '#b9b9f9', letterSpacing: '0.05em' }}>PRO</span>
       </Link>
     )
   }
@@ -52,14 +58,22 @@ function NavLink({ href, label, icon: Icon, isPro }: { href: string; label: stri
     <Link
       href={href}
       className={cn(
-        'flex items-center gap-3 rounded-lg font-semibold transition-all duration-150',
-        active ? 'sidebar-active' : 'hover:bg-white/[0.05]'
+        'flex items-center gap-3 rounded-lg transition-all duration-150',
+        active ? 'sidebar-active' : ''
       )}
-      style={{ color: active ? '#fff' : 'var(--text-secondary)', fontSize: '14px', padding: '10px 12px' }}
+      style={{
+        color: active ? '#fff' : 'rgba(255,255,255,0.55)',
+        fontSize: '13.5px',
+        fontWeight: 300,
+        padding: '9px 12px',
+        background: active ? 'rgba(255,255,255,0.1)' : 'transparent',
+      }}
+      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.06)' }}
+      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
     >
       <Icon
         className="flex-shrink-0"
-        style={{ width: '18px', height: '18px', color: active ? '#a78bfa' : 'var(--text-muted)' }}
+        style={{ width: '17px', height: '17px', color: active ? '#b9b9f9' : 'rgba(255,255,255,0.35)' }}
       />
       <span>{label}</span>
     </Link>
@@ -70,12 +84,12 @@ export default function Sidebar() {
   return (
     <aside
       className="fixed top-0 left-0 h-full flex flex-col z-40"
-      style={{ width: 'var(--sidebar-width)', background: '#0d0f1e', borderRight: '1px solid rgba(255,255,255,0.06)' }}
+      style={{ width: 'var(--sidebar-width)', background: '#1c1e54', borderRight: '1px solid rgba(255,255,255,0.08)' }}
     >
       {/* Logo */}
       <div
         className="flex items-center gap-3 px-5 flex-shrink-0"
-        style={{ height: '60px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        style={{ height: '60px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}
       >
         <Logo size="sm" variant="horizontal" />
       </div>
@@ -85,17 +99,16 @@ export default function Sidebar() {
         {mainNav.map(item => <NavLink key={item.href} {...item} />)}
       </nav>
 
-      {/* AI Tools section — no label, just a divider */}
-      <div style={{ margin: '8px 16px 0', borderTop: '1px solid rgba(255,255,255,0.06)' }} />
+      {/* AI Tools divider */}
+      <div style={{ margin: '10px 16px 0', borderTop: '1px solid rgba(255,255,255,0.08)' }} />
       <nav className="px-2 pt-3 space-y-0.5">
         {toolNav.map(item => <NavLink key={item.href} {...item} />)}
       </nav>
 
-      {/* Spacer */}
       <div className="flex-1" />
 
       {/* Bottom */}
-      <div className="px-2 pb-4 pt-3 space-y-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div className="px-2 pb-4 pt-3 space-y-0.5" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
         {bottomNav.map(item => <NavLink key={item.href} {...item} />)}
       </div>
     </aside>
