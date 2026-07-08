@@ -2,20 +2,28 @@
 
 :root {
   --bg-primary: #0c0e1a;
-  --bg-card: #141728;
-  --bg-card-hover: #1a1e32;
+  --bg-card: #161827;
+  --bg-card-hover: #1c1f35;
   --bg-surface: #0f111f;
+  --bg-elevated: #1e2236;
+  --bg-overlay: #1a1d30;
+
   --accent-purple: #7c3aed;
   --accent-purple-hover: #8b47f5;
+  --accent-purple-dim: rgba(124, 58, 237, 0.15);
   --accent-cyan: #06b6d4;
   --accent-green: #10b981;
   --accent-yellow: #f59e0b;
   --accent-pink: #ec4899;
+
   --text-primary: #e8edf5;
   --text-secondary: #8896b0;
   --text-muted: #4e5e78;
+
   --border-color: rgba(255, 255, 255, 0.07);
   --border-strong: rgba(255, 255, 255, 0.13);
+  --border-subtle: rgba(255, 255, 255, 0.05);
+
   --sidebar-width: 240px;
 }
 
@@ -42,6 +50,11 @@ html, body {
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(124,58,237,0.5); }
+
+/* ── Display headings (Sora) ── */
+.heading-display {
+  font-family: var(--font-sora), var(--font-inter), system-ui, sans-serif;
+}
 
 /* ── Cards ── */
 .card {
@@ -74,11 +87,15 @@ html, body {
   font-size: 13.5px;
   letter-spacing: -0.01em;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
 }
 .btn-primary:hover {
   background: var(--accent-purple-hover);
-  box-shadow: 0 4px 18px rgba(124,58,237,0.4);
+  box-shadow: 0 4px 18px rgba(124,58,237,0.35);
+  transform: translateY(-1px);
+}
+.btn-primary:active {
+  transform: scale(0.98);
 }
 
 .btn-secondary {
@@ -154,9 +171,9 @@ html, body {
   color: #fff;
 }
 
-/* ── Gradient text ── */
+/* ── Gradient text — single-hue purple only ── */
 .gradient-text {
-  background: linear-gradient(135deg, #a78bfa, #06b6d4);
+  background: linear-gradient(135deg, #c4b5fd, #7c3aed);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -181,7 +198,24 @@ html, body {
 
 /* ── Progress ── */
 .progress-bar { height: 4px; background: rgba(255,255,255,0.06); border-radius: 10px; overflow: hidden; }
-.progress-fill { height: 100%; background: linear-gradient(90deg, #7c3aed, #06b6d4); border-radius: 10px; transition: width 0.5s ease; }
+.progress-fill { height: 100%; background: var(--accent-purple); border-radius: 10px; transition: width 0.5s ease; }
+
+/* ── Skeletons ── */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(255,255,255,0.04) 25%,
+    rgba(255,255,255,0.08) 50%,
+    rgba(255,255,255,0.04) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s infinite;
+  border-radius: 6px;
+}
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
 
 /* ── AI chat ── */
 .pulse-purple { animation: pulse-purple 2s infinite; }
@@ -191,12 +225,12 @@ html, body {
 }
 
 /* ── Animations ── */
-.slide-up { animation: slideUp 0.22s ease forwards; }
+.slide-up { animation: slideUp 0.2s ease forwards; }
 @keyframes slideUp {
-  from { transform: translateY(12px); opacity: 0; }
+  from { transform: translateY(10px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
 }
-.fade-in { animation: fadeIn 0.22s ease forwards; }
+.fade-in { animation: fadeIn 0.2s ease forwards; }
 @keyframes fadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -204,3 +238,13 @@ html, body {
 
 /* ── Chat bubble scrollbar ── */
 .chat-messages { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.1) transparent; }
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

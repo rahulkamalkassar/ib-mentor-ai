@@ -2,9 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Bell, Search, LogOut, User } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
+import { useSession, signOut as nextAuthSignOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
-import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 interface HeaderProps {
   title: string
@@ -13,15 +12,10 @@ interface HeaderProps {
 }
 
 export default function Header({ title, subtitle, actions }: HeaderProps) {
-  const [user, setUser] = useState<SupabaseUser | null>(null)
+  const { data: session } = useSession()
   const [menuOpen, setMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const router = useRouter()
-  const supabase = createClient()
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user))
-  }, [])
 
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
@@ -32,12 +26,11 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
   }, [])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/login')
+    await nextAuthSignOut({ callbackUrl: '/login' })
   }
 
-  const avatarUrl = user?.user_metadata?.avatar_url as string | undefined
-  const name = (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? 'IB'
+  const avatarUrl = session?.user?.image ?? undefined
+  const name = session?.user?.name ?? session?.user?.email ?? 'IB'
   const initials = name.split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2)
 
   return (
@@ -102,7 +95,7 @@ export default function Header({ title, subtitle, actions }: HeaderProps) {
                   )}
                   <div style={{ minWidth: 0 }}>
                     <p style={{ fontSize: '13px', fontWeight: 600, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</p>
-                    <p style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.email}</p>
+                    <p style={{ fontSize: '11px', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session?.user?.email}</p>
                   </div>
                 </div>
               </div>

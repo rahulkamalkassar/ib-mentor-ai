@@ -1,10 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 
-// After Google sign-in with a paid plan, this page triggers Stripe checkout
-export default function PricingCheckoutPage() {
+function CheckoutRedirect() {
   const params = useSearchParams()
   const plan = params.get('plan')
 
@@ -20,6 +19,10 @@ export default function PricingCheckoutPage() {
       .catch(() => { window.location.href = '/dashboard' })
   }, [plan])
 
+  return null
+}
+
+export default function PricingCheckoutPage() {
   return (
     <div style={{ minHeight: '100vh', background: '#0d0f1a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       <div style={{ textAlign: 'center' }}>
@@ -31,6 +34,9 @@ export default function PricingCheckoutPage() {
         <p style={{ color: '#64748b', fontSize: 14 }}>Setting up your payment…</p>
       </div>
       <style>{`@keyframes bounce { 0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)} }`}</style>
+      <Suspense>
+        <CheckoutRedirect />
+      </Suspense>
     </div>
   )
 }

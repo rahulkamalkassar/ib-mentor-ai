@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { IB_CURRICULUM, TOK_CURRICULUM, EE_CURRICULUM, DIPLOMA_SCORING, IB_COMMAND_TERMS } from '@/data/ib-curriculum'
+import { IB_CURRICULUM, IB_COMMAND_TERMS } from '@/data/ib-curriculum'
 
 export const maxDuration = 60
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
-// Build a compact curriculum reference the AI can use
 function buildCurriculumContext(): string {
   const subjectSummaries = IB_CURRICULUM.map(s => {
     const topics = s.coreTopics.map(t => t.name).join(', ')
@@ -50,11 +49,7 @@ ${subjectSummaries}
 
 const CURRICULUM_CONTEXT = buildCurriculumContext()
 
-export async function POST(request: NextRequest) {
-  try {
-    const { messages, context } = await request.json()
-
-    const systemPrompt = `You are an expert IB (International Baccalaureate) tutor and study coach with deep knowledge of the full IB Diploma Programme curriculum. You help students excel in their IB exams and internal assessments.
+const SYSTEM_PROMPT = `You are an expert IB (International Baccalaureate) tutor and study coach with deep knowledge of the full IB Diploma Programme curriculum. You help students excel in their IB exams and internal assessments.
 
 Your expertise covers:
 - All IB subjects across Groups 1–6 with precise syllabus knowledge
@@ -68,8 +63,6 @@ Your expertise covers:
 
 ${CURRICULUM_CONTEXT}
 
-${context ? `\n=== STUDENT PROFILE ===\n${JSON.stringify(context, null, 2)}` : ''}
-
 RESPONSE GUIDELINES:
 - Be specific to the IB syllabus — name exact topics, assessment criteria and mark scheme language
 - When a student asks about a concept, explain it at the right IB level (SL vs HL)
@@ -79,7 +72,15 @@ RESPONSE GUIDELINES:
 - Use markdown formatting for clarity (bold key terms, bullet points for steps, code blocks for maths)
 - Keep responses focused and actionable`
 
-    const response = await client.messages.create({
+export async function POST(request: NextRequest) {
+  try {
+    const { messages, context } = await request.json()
+
+    const systemPrompt = context
+      ? `${SYSTEM_PROMPT}\n\n=== STUDENT PROFILE ===\n${JSON.stringify(context, null, 2)}`
+      : SYSTEM_PROMPT
+
+    const stream = client.messages.stream({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
       system: systemPrompt,
@@ -89,10 +90,13 @@ RESPONSE GUIDELINES:
       })),
     })
 
-    const content = response.content[0]
-    if (content.type !== 'text') throw new Error('Unexpected response type')
-
-    return NextResponse.json({ content: content.text })
+    return new Response(stream.toReadableStream(), {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+      },
+    })
   } catch (error) {
     console.error('AI chat error:', error)
     return NextResponse.json({ error: 'Failed to get AI response' }, { status: 500 })

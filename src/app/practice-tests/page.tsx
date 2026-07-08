@@ -6,7 +6,7 @@ import Header from '@/components/layout/Header'
 import {
   Trophy, ChevronDown, Clock, Sparkles, Play, Square, Upload,
   RotateCcw, X, Loader2, ChevronRight, FileText, BarChart3,
-  BookOpen, Zap, Eye, EyeOff, ArrowLeft, Check
+  BookOpen, Zap, Eye, EyeOff, ArrowLeft, Check, Crosshair, MessageSquare
 } from 'lucide-react'
 import { OnboardingData } from '@/types'
 import { IB_TOPICS, DP_UNITS } from '@/data/ib-data'
@@ -59,12 +59,11 @@ function formatTime(seconds: number): string {
 }
 
 function renderInline(text: string): React.ReactNode {
-  // Render **bold**, marks [N], and plain text
   const parts = text.split(/(\*\*[^*]+\*\*|\[\d+\])/g)
   return parts.map((part, i) => {
     if (/^\*\*[^*]+\*\*$/.test(part)) return <strong key={i}>{part.slice(2, -2)}</strong>
     if (/^\[\d+\]$/.test(part)) return (
-      <span key={i} className="inline-flex items-center justify-center ml-2 text-xs font-bold px-2 py-0.5 rounded-full" style={{ background: '#e0e7ff', color: '#4338ca', minWidth: 28 }}>{part}</span>
+      <span key={i} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginLeft: 8, fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 20, background: '#dbeafe', color: '#1d4ed8', minWidth: 28 }}>{part}</span>
     )
     return <span key={i}>{part}</span>
   })
@@ -81,27 +80,24 @@ function PaperRenderer({ content }: { content: string }) {
     const line = lines[i]
     const trimmed = line.trim()
 
-    // ━━━ thick divider — start/end of header block
     if (trimmed.startsWith('━')) {
       if (!inHeader) {
         inHeader = true
         headerLines = []
       } else {
-        // End of header — render the collected header block
         inHeader = false
         elements.push(
-          <div key={`hdr-${i}`} className="mb-8 pb-6" style={{ borderBottom: '3px solid #1e3a5f' }}>
+          <div key={`hdr-${i}`} style={{ marginBottom: 36, paddingBottom: 24, borderBottom: '2px solid #1e3a5f' }}>
             {headerLines.map((hl, hi) => {
               const ht = hl.trim()
               if (!ht) return null
-              if (/^IB DIPLOMA/.test(ht)) return <div key={hi} className="text-xs font-bold tracking-[0.2em] uppercase mb-1" style={{ color: '#64748b' }}>{ht}</div>
-              if (/^INSTRUCTIONS TO/.test(ht)) return <div key={hi} className="text-xs font-bold tracking-widest uppercase mt-4 mb-2" style={{ color: '#334155' }}>{ht}</div>
-              if (ht.startsWith('•')) return <div key={hi} className="text-sm ml-3 mb-0.5 flex gap-2" style={{ color: '#475569' }}><span>•</span><span>{ht.slice(1).trim()}</span></div>
-              // Subject line (all caps, largest)
+              if (/^IB DIPLOMA/.test(ht)) return <div key={hi} style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#64748b', marginBottom: 4 }}>{ht}</div>
+              if (/^INSTRUCTIONS TO/.test(ht)) return <div key={hi} style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', marginTop: 20, marginBottom: 8, color: '#334155' }}>{ht}</div>
+              if (ht.startsWith('•')) return <div key={hi} style={{ fontSize: 13, marginLeft: 12, marginBottom: 3, display: 'flex', gap: 8, color: '#475569' }}><span>•</span><span>{ht.slice(1).trim()}</span></div>
               if (ht === ht.toUpperCase() && ht.length > 3 && !ht.startsWith('•') && !ht.includes('Do not') && !ht.includes('Write') && !ht.includes('Calculator') && !ht.includes('maximum') && !ht.includes('show') && !ht.includes('Where') && !ht.includes('Answer') && !/^\d/.test(ht)) {
-                return <div key={hi} className="text-2xl font-black tracking-tight mt-1 mb-0.5" style={{ color: '#0f172a' }}>{ht}</div>
+                return <div key={hi} style={{ fontSize: 26, fontWeight: 900, letterSpacing: '-0.02em', marginTop: 4, marginBottom: 2, color: '#0f172a', fontFamily: 'Georgia, serif' }}>{ht}</div>
               }
-              return <div key={hi} className="text-sm mb-0.5" style={{ color: '#475569' }}>{ht}</div>
+              return <div key={hi} style={{ fontSize: 13, marginBottom: 2, color: '#475569' }}>{ht}</div>
             })}
           </div>
         )
@@ -112,59 +108,53 @@ function PaperRenderer({ content }: { content: string }) {
 
     if (inHeader) { headerLines.push(line); i++; continue }
 
-    // ─── dashed divider (question separator)
     if (trimmed.startsWith('─') || trimmed === '---') {
-      elements.push(<div key={`div-${i}`} className="my-5" style={{ borderTop: '1px dashed #cbd5e1' }} />)
+      elements.push(<div key={`div-${i}`} style={{ margin: '20px 0', borderTop: '1px dashed #cbd5e1' }} />)
       i++; continue
     }
 
-    // SECTION headers
     if (/^#{1,3}\s/.test(trimmed)) {
       const text = trimmed.replace(/^#+\s*/, '')
       elements.push(
-        <div key={`sec-${i}`} className="mt-10 mb-4 flex items-center gap-3">
-          <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
-          <span className="text-xs font-black tracking-[0.2em] uppercase px-3 py-1 rounded-full" style={{ background: '#1e3a5f', color: 'white' }}>{text}</span>
-          <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+        <div key={`sec-${i}`} style={{ margin: '40px 0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+          <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase', padding: '4px 14px', borderRadius: 20, background: '#1e3a5f', color: 'white' }}>{text}</span>
+          <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
         </div>
       )
       i++; continue
     }
+
     if (/^SECTION [A-Z]/.test(trimmed)) {
       const parts = trimmed.match(/^(SECTION [A-Z])\s*[—–-]?\s*(.*)/)
       const label = parts?.[1] ?? trimmed
       const desc = parts?.[2] ?? ''
       elements.push(
-        <div key={`sec-${i}`} className="mt-10 mb-4 flex items-center gap-3">
-          <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
-          <div className="text-center px-4">
-            <span className="text-xs font-black tracking-[0.2em] uppercase px-3 py-1 rounded-full" style={{ background: '#1e3a5f', color: 'white' }}>{label}</span>
-            {desc && <div className="text-xs mt-1" style={{ color: '#64748b' }}>{desc}</div>}
+        <div key={`sec-${i}`} style={{ margin: '40px 0 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
+          <div style={{ textAlign: 'center', padding: '0 16px' }}>
+            <span style={{ fontSize: 11, fontWeight: 900, letterSpacing: '0.18em', textTransform: 'uppercase', padding: '4px 14px', borderRadius: 20, background: '#1e3a5f', color: 'white' }}>{label}</span>
+            {desc && <div style={{ fontSize: 12, marginTop: 4, color: '#64748b' }}>{desc}</div>}
           </div>
-          <div className="flex-1 h-px" style={{ background: '#e2e8f0' }} />
+          <div style={{ flex: 1, height: 1, background: '#e2e8f0' }} />
         </div>
       )
       i++; continue
     }
 
-    // DIAGRAM placeholder
     if (/^\[DIAGRAM:/i.test(trimmed)) {
       const desc = trimmed.replace(/^\[DIAGRAM:\s*/i, '').replace(/\]$/, '')
       elements.push(
-        <div key={`diag-${i}`} className="my-5 rounded-xl overflow-hidden" style={{ border: '1.5px dashed #94a3b8' }}>
-          <div className="px-4 py-2 text-xs font-bold tracking-widest uppercase" style={{ background: '#f1f5f9', color: '#64748b', borderBottom: '1px dashed #cbd5e1' }}>Diagram</div>
-          <div className="flex items-center justify-center p-8 text-sm text-center" style={{ background: '#f8fafc', color: '#94a3b8', minHeight: 100 }}>
-            <div>
-              <div className="text-2xl mb-2">📊</div>
-              <div className="italic">{desc}</div>
-            </div>
+        <div key={`diag-${i}`} style={{ margin: '20px 0', borderRadius: 12, overflow: 'hidden', border: '1.5px dashed #94a3b8' }}>
+          <div style={{ padding: '6px 16px', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', background: '#f1f5f9', color: '#64748b', borderBottom: '1px dashed #cbd5e1' }}>Diagram</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32, minHeight: 100, background: '#f8fafc', color: '#94a3b8', textAlign: 'center', fontSize: 13 }}>
+            <div><div style={{ fontSize: 28, marginBottom: 8 }}>📊</div><div style={{ fontStyle: 'italic' }}>{desc}</div></div>
           </div>
         </div>
       )
       i++; continue
     }
 
-    // MCQ block: collect A B C D options
     if (/^[A-D]\.\s/.test(trimmed)) {
       const opts: string[] = []
       while (i < lines.length && /^[A-D]\.\s/.test(lines[i].trim())) {
@@ -172,14 +162,14 @@ function PaperRenderer({ content }: { content: string }) {
         i++
       }
       elements.push(
-        <div key={`mcq-${i}`} className="grid grid-cols-1 gap-2 mt-3 mb-4 ml-6">
+        <div key={`mcq-${i}`} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12, marginBottom: 16, marginLeft: 28 }}>
           {opts.map((opt, oi) => {
             const letter = opt[0]
             const text = opt.slice(3)
             return (
-              <div key={oi} className="flex items-start gap-3 px-4 py-2.5 rounded-lg" style={{ background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                <span className="flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-black" style={{ background: '#1e3a5f', color: 'white' }}>{letter}</span>
-                <span className="text-sm" style={{ color: '#1e293b' }}>{renderInline(text)}</span>
+              <div key={oi} style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 14px', borderRadius: 10, background: '#f8fafc', border: '1.5px solid #e2e8f0', transition: 'all 0.12s' }}>
+                <span style={{ flexShrink: 0, width: 24, height: 24, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 900, background: '#1e3a5f', color: 'white' }}>{letter}</span>
+                <span style={{ fontSize: 13, color: '#1e293b', lineHeight: 1.5 }}>{renderInline(text)}</span>
               </div>
             )
           })}
@@ -188,59 +178,54 @@ function PaperRenderer({ content }: { content: string }) {
       continue
     }
 
-    // Answer lines (dots)
     if (/^\.{5,}/.test(trimmed)) {
       const count = (trimmed.match(/\.\./g) || []).length
       const lineCount = Math.max(1, Math.round(count / 20))
       elements.push(
-        <div key={`ans-${i}`} className="my-3 ml-6 space-y-3">
+        <div key={`ans-${i}`} style={{ margin: '12px 0 12px 28px', display: 'flex', flexDirection: 'column', gap: 18 }}>
           {Array.from({ length: lineCount }).map((_, li) => (
-            <div key={li} className="h-px" style={{ background: '#94a3b8' }} />
+            <div key={li} style={{ height: 1, background: 'linear-gradient(to right, #94a3b8, transparent)', opacity: 0.6 }} />
           ))}
         </div>
       )
       i++; continue
     }
 
-    // Numbered question: **1.** or 1. at line start
     const qMatch = trimmed.match(/^\*?\*?(\d+)\.\*?\*?\s+(.*)/)
     if (qMatch && !trimmed.startsWith('  ')) {
       const num = qMatch[1]
       const rest = qMatch[2]
       elements.push(
-        <div key={`q-${i}`} className="flex gap-4 mt-8 mb-2">
-          <div className="flex-shrink-0 w-8 h-8 rounded-lg flex items-center justify-center font-black text-sm" style={{ background: '#1e3a5f', color: 'white' }}>{num}</div>
-          <div className="flex-1 pt-1 text-sm font-medium leading-relaxed" style={{ color: '#0f172a' }}>{renderInline(rest)}</div>
+        <div key={`q-${i}`} style={{ display: 'flex', gap: 16, marginTop: 32, marginBottom: 8 }}>
+          <div style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 900, fontSize: 14, background: '#0f2744', color: 'white', fontFamily: 'Georgia, serif' }}>{num}</div>
+          <div style={{ flex: 1, paddingTop: 6, fontSize: 14, fontWeight: 500, lineHeight: 1.7, color: '#0f172a' }}>{renderInline(rest)}</div>
         </div>
       )
       i++; continue
     }
 
-    // Sub-question: (a), (b), (i), (ii)
     const subMatch = trimmed.match(/^\(((?:[a-e]|i{1,3}|iv|v|vi))\)\s+(.*)/)
     if (subMatch) {
       elements.push(
-        <div key={`sub-${i}`} className="flex gap-3 ml-8 mt-4 mb-1">
-          <span className="flex-shrink-0 w-6 h-6 rounded flex items-center justify-center text-xs font-bold" style={{ background: '#e0e7ff', color: '#4338ca' }}>({subMatch[1]})</span>
-          <div className="flex-1 text-sm leading-relaxed" style={{ color: '#1e293b' }}>{renderInline(subMatch[2])}</div>
+        <div key={`sub-${i}`} style={{ display: 'flex', gap: 12, marginLeft: 40, marginTop: 16, marginBottom: 4 }}>
+          <span style={{ flexShrink: 0, width: 26, height: 26, borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, background: '#dbeafe', color: '#1d4ed8' }}>({subMatch[1]})</span>
+          <div style={{ flex: 1, fontSize: 13.5, lineHeight: 1.65, color: '#1e293b' }}>{renderInline(subMatch[2])}</div>
         </div>
       )
       i++; continue
     }
 
-    // Bullet points
     if (trimmed.startsWith('•') || trimmed.startsWith('–') || trimmed.startsWith('-')) {
       const text = trimmed.replace(/^[•–-]\s*/, '')
       elements.push(
-        <div key={`bul-${i}`} className="flex gap-2 ml-10 mb-1 text-sm" style={{ color: '#334155' }}>
-          <span style={{ color: '#94a3b8' }}>•</span>
+        <div key={`bul-${i}`} style={{ display: 'flex', gap: 8, marginLeft: 48, marginBottom: 4, fontSize: 13, color: '#334155' }}>
+          <span style={{ color: '#94a3b8', flexShrink: 0 }}>•</span>
           <span>{renderInline(text)}</span>
         </div>
       )
       i++; continue
     }
 
-    // Table rows (markdown)
     if (trimmed.startsWith('|')) {
       const tableLines: string[] = []
       while (i < lines.length && lines[i].trim().startsWith('|')) {
@@ -249,14 +234,14 @@ function PaperRenderer({ content }: { content: string }) {
       }
       const rows = tableLines.filter(r => !/^\|[-| ]+\|$/.test(r))
       elements.push(
-        <div key={`tbl-${i}`} className="my-4 overflow-x-auto ml-6">
-          <table className="text-sm border-collapse w-full">
+        <div key={`tbl-${i}`} style={{ margin: '16px 0 16px 28px', overflowX: 'auto' }}>
+          <table style={{ fontSize: 13, borderCollapse: 'collapse', width: '100%' }}>
             {rows.map((row, ri) => {
               const cells = row.split('|').filter(Boolean).map(c => c.trim())
               return (
-                <tr key={ri} style={{ background: ri === 0 ? '#f1f5f9' : ri % 2 === 0 ? '#f8fafc' : 'white' }}>
+                <tr key={ri} style={{ background: ri === 0 ? '#f0f4ff' : ri % 2 === 0 ? '#f8fafc' : 'white' }}>
                   {cells.map((cell, ci) => (
-                    <td key={ci} className={`px-3 py-2 ${ri === 0 ? 'font-bold' : ''}`} style={{ border: '1px solid #e2e8f0', color: '#1e293b' }}>{renderInline(cell)}</td>
+                    <td key={ci} style={{ padding: '8px 12px', border: '1px solid #e2e8f0', color: '#1e293b', fontWeight: ri === 0 ? 700 : 400 }}>{renderInline(cell)}</td>
                   ))}
                 </tr>
               )
@@ -267,56 +252,58 @@ function PaperRenderer({ content }: { content: string }) {
       continue
     }
 
-    // Bold-only line (section label or note)
     if (/^\*\*[^*]+\*\*$/.test(trimmed)) {
-      elements.push(<div key={`bold-${i}`} className="font-bold text-sm mt-4 mb-1" style={{ color: '#1e3a5f' }}>{trimmed.slice(2, -2)}</div>)
+      elements.push(<div key={`bold-${i}`} style={{ fontWeight: 700, fontSize: 13, marginTop: 16, marginBottom: 4, color: '#1e3a5f' }}>{trimmed.slice(2, -2)}</div>)
       i++; continue
     }
 
-    // NOTE TO CANDIDATES etc.
     if (/^NOTE TO|^End of|^Total:/.test(trimmed)) {
       elements.push(
-        <div key={`note-${i}`} className="mt-8 p-3 rounded-lg text-xs font-medium text-center" style={{ background: '#f1f5f9', color: '#475569' }}>{trimmed}</div>
+        <div key={`note-${i}`} style={{ marginTop: 32, padding: '10px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500, textAlign: 'center', background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0' }}>{trimmed}</div>
       )
       i++; continue
     }
 
-    // Empty line
-    if (!trimmed) { elements.push(<div key={`sp-${i}`} className="h-2" />); i++; continue }
+    if (!trimmed) { elements.push(<div key={`sp-${i}`} style={{ height: 8 }} />); i++; continue }
 
-    // Default paragraph
-    elements.push(<p key={`p-${i}`} className="text-sm leading-relaxed mb-1 ml-2" style={{ color: '#334155' }}>{renderInline(trimmed)}</p>)
+    elements.push(<p key={`p-${i}`} style={{ fontSize: 13.5, lineHeight: 1.7, marginBottom: 4, marginLeft: 8, color: '#334155' }}>{renderInline(trimmed)}</p>)
     i++
   }
 
-  return <div className="space-y-0">{elements}</div>
+  return <div>{elements}</div>
 }
 
 export default function PracticeTestsPage() {
   const [userData, setUserData] = useState<OnboardingData | null>(null)
-  const [totalPoints, setTotalPoints] = useState(247)
+  const [totalPoints, setTotalPoints] = useState(0)
   const [view, setView] = useState<View>('home')
   const [currentPaper, setCurrentPaper] = useState<GeneratedPaper | null>(null)
   const [pastPapers, setPastPapers] = useState<GeneratedPaper[]>([])
   const [showMarkScheme, setShowMarkScheme] = useState(false)
 
-  // Configure form
   const [selectedSubject, setSelectedSubject] = useState('')
   const [selectedLevel, setSelectedLevel] = useState<'SL' | 'HL'>('SL')
   const [selectedPaperType, setSelectedPaperType] = useState('Paper 1')
   const [selectedTopics, setSelectedTopics] = useState<string[]>([])
   const [selectedDifficulty, setSelectedDifficulty] = useState('Standard')
 
-  // Exam timer
   const [timeLeft, setTimeLeft] = useState(0)
   const [timerRunning, setTimerRunning] = useState(false)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Submit / marking
   const [showSubmitModal, setShowSubmitModal] = useState(false)
   const [uploadedImages, setUploadedImages] = useState<File[]>([])
   const [imagePreviewUrls, setImagePreviewUrls] = useState<string[]>([])
   const [analyzing, setAnalyzing] = useState(false)
+
+  // AI help drag-select state
+  const [aiHelpMode, setAiHelpMode] = useState(false)
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragClientStart, setDragClientStart] = useState<{ x: number; y: number } | null>(null)
+  const [dragClientCurrent, setDragClientCurrent] = useState<{ x: number; y: number } | null>(null)
+  const [aiPanel, setAiPanel] = useState<{ loading: boolean; response: string; x: number; y: number } | null>(null)
+  const overlayRef = useRef<HTMLDivElement>(null)
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null)
 
   useEffect(() => {
     const data = localStorage.getItem('ib_onboarding_data')
@@ -330,9 +317,10 @@ export default function PracticeTestsPage() {
     }
     const saved = localStorage.getItem('ib_past_papers')
     if (saved) setPastPapers(JSON.parse(saved))
+    const savedPoints = localStorage.getItem('ib_xp_points')
+    if (savedPoints) setTotalPoints(parseInt(savedPoints, 10))
   }, [])
 
-  // Timer
   useEffect(() => {
     if (timerRunning && timeLeft > 0) {
       timerRef.current = setInterval(() => setTimeLeft(t => t - 1), 1000)
@@ -342,6 +330,11 @@ export default function PracticeTestsPage() {
     }
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [timerRunning, timeLeft])
+
+  // Exit AI help mode when leaving exam
+  useEffect(() => {
+    if (view !== 'exam') setAiHelpMode(false)
+  }, [view])
 
   const currentTier = TIER_CONFIG.find(t => totalPoints >= t.min && totalPoints < t.max) || TIER_CONFIG[0]
   const nextTier = TIER_CONFIG[TIER_CONFIG.indexOf(currentTier) + 1]
@@ -427,7 +420,11 @@ export default function PracticeTestsPage() {
       const updated = [...pastPapers, updatedPaper]
       setPastPapers(updated)
       localStorage.setItem('ib_past_papers', JSON.stringify(updated))
-      setTotalPoints(p => p + 75)
+      setTotalPoints(p => {
+        const next = p + 75
+        localStorage.setItem('ib_xp_points', String(next))
+        return next
+      })
       setTimerRunning(false)
       setView('feedback')
     } catch {
@@ -452,11 +449,98 @@ export default function PracticeTestsPage() {
     setImagePreviewUrls([])
     setTimerRunning(false)
     setShowMarkScheme(false)
+    setAiHelpMode(false)
+    setAiPanel(null)
     setView('home')
   }
 
+  // ── AI drag-select handlers ──────────────────────────────
+  const onOverlayMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    dragStartRef.current = { x: e.clientX, y: e.clientY }
+    setDragClientStart({ x: e.clientX, y: e.clientY })
+    setDragClientCurrent({ x: e.clientX, y: e.clientY })
+    setIsDragging(true)
+    setAiPanel(null)
+  }
+
+  const onOverlayMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging) return
+    setDragClientCurrent({ x: e.clientX, y: e.clientY })
+  }
+
+  const onOverlayMouseUp = async (e: React.MouseEvent) => {
+    if (!isDragging || !dragStartRef.current) { setIsDragging(false); return }
+    const start = dragStartRef.current
+    const end = { x: e.clientX, y: e.clientY }
+    setIsDragging(false)
+    setDragClientStart(null)
+    setDragClientCurrent(null)
+    dragStartRef.current = null
+
+    if (Math.abs(end.x - start.x) < 12 && Math.abs(end.y - start.y) < 12) return
+
+    const x1 = Math.min(start.x, end.x)
+    const y1 = Math.min(start.y, end.y)
+    const x2 = Math.max(start.x, end.x)
+    const y2 = Math.max(start.y, end.y)
+
+    // Extract text via Range API
+    let selectedText = ''
+    try {
+      const range = document.createRange()
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const cr = (document as any).caretRangeFromPoint
+      const sr = cr?.(x1, y1)
+      const er = cr?.(x2, y2)
+      if (sr && er) {
+        range.setStart(sr.startContainer, sr.startOffset)
+        range.setEnd(er.startContainer, er.startOffset)
+        selectedText = range.toString().trim()
+      }
+    } catch {}
+
+    // DOM element fallback
+    if (!selectedText && overlayRef.current?.parentElement) {
+      const seen = new Set<string>()
+      const parts: string[] = []
+      overlayRef.current.parentElement.querySelectorAll('p, div, span, td, strong').forEach(el => {
+        if (el.children.length > 2) return
+        const r = el.getBoundingClientRect()
+        if (r.right > x1 && r.left < x2 && r.bottom > y1 && r.top < y2) {
+          const t = el.textContent?.trim() || ''
+          if (t.length > 3 && !seen.has(t)) { seen.add(t); parts.push(t) }
+        }
+      })
+      selectedText = parts.slice(0, 12).join(' ')
+    }
+
+    if (!selectedText || selectedText.length < 5) return
+
+    const panelX = Math.min(Math.max(x1, 16), window.innerWidth - 400)
+    const panelY = Math.min(y2 + 12, window.innerHeight - 340)
+    setAiPanel({ loading: true, response: '', x: panelX, y: panelY })
+
+    try {
+      const res = await fetch('/api/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          messages: [{
+            role: 'user',
+            content: `I'm doing an IB ${currentPaper?.subject} ${currentPaper?.level} exam. I've selected this part of the question:\n\n"${selectedText.slice(0, 600)}"\n\nGive me a concise hint (2–3 sentences max): what concept or skill is being tested, and what approach to take. Do NOT give me the full answer.`
+          }]
+        })
+      })
+      const d = await res.json()
+      setAiPanel(prev => prev ? { ...prev, loading: false, response: d.content || 'No response.' } : null)
+    } catch {
+      setAiPanel(prev => prev ? { ...prev, loading: false, response: 'Could not get AI help. Please try again.' } : null)
+    }
+  }
+
   // ──────────────────────────────────────────────────────────
-  // EXAM / PAPER VIEW
+  // EXAM / PAPER / FEEDBACK VIEW
   // ──────────────────────────────────────────────────────────
   if ((view === 'paper' || view === 'exam' || view === 'feedback') && currentPaper) {
     const isExam = view === 'exam'
@@ -466,6 +550,7 @@ export default function PracticeTestsPage() {
     return (
       <MainLayout>
         <div className="flex flex-col h-screen" style={{ background: '#0d0f1a' }}>
+
           {/* Top Bar */}
           <div className="flex items-center justify-between px-6 py-3 flex-shrink-0" style={{ background: '#0f1120', borderBottom: '1px solid #1e2a3a' }}>
             <div className="flex items-center gap-4">
@@ -484,6 +569,24 @@ export default function PracticeTestsPage() {
             </div>
 
             <div className="flex items-center gap-3">
+              {/* AI Help toggle — only during exam */}
+              {isExam && (
+                <button
+                  onClick={() => { setAiHelpMode(m => !m); setAiPanel(null) }}
+                  className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl transition-all"
+                  style={{
+                    background: aiHelpMode ? 'rgba(124,58,237,0.25)' : '#1e2a3a',
+                    border: `1px solid ${aiHelpMode ? '#7c3aed' : '#2d3748'}`,
+                    color: aiHelpMode ? '#c4b5fd' : '#94a3b8',
+                    boxShadow: aiHelpMode ? '0 0 12px rgba(124,58,237,0.3)' : 'none',
+                  }}
+                  title="Drag to select any part of the paper for an AI hint"
+                >
+                  <Crosshair className="w-4 h-4" />
+                  {aiHelpMode ? 'Drag to select…' : 'AI Help'}
+                </button>
+              )}
+
               {/* Timer */}
               {(isExam || (view === 'feedback' && timeLeft > 0)) && (
                 <div className="flex items-center gap-2 px-4 py-2 rounded-xl" style={{ background: timerDanger ? 'rgba(239,68,68,0.15)' : '#1e2a3a', border: `1px solid ${timerDanger ? 'rgba(239,68,68,0.5)' : '#2d3748'}` }}>
@@ -510,26 +613,71 @@ export default function PracticeTestsPage() {
                 </button>
               )}
               {isFeedback && (
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowMarkScheme(s => !s)}
-                    className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl transition-all"
-                    style={{ background: showMarkScheme ? 'rgba(124,58,237,0.2)' : '#1e2a3a', border: '1px solid #2d3748', color: showMarkScheme ? '#c4b5fd' : '#94a3b8' }}
-                  >
-                    {showMarkScheme ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />} Mark Scheme
-                  </button>
-                </div>
+                <button
+                  onClick={() => setShowMarkScheme(s => !s)}
+                  className="flex items-center gap-2 text-sm px-4 py-2 rounded-xl transition-all"
+                  style={{ background: showMarkScheme ? 'rgba(124,58,237,0.2)' : '#1e2a3a', border: '1px solid #2d3748', color: showMarkScheme ? '#c4b5fd' : '#94a3b8' }}
+                >
+                  {showMarkScheme ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />} Mark Scheme
+                </button>
               )}
             </div>
           </div>
 
+          {/* AI help mode banner */}
+          {isExam && aiHelpMode && (
+            <div className="flex items-center justify-center gap-2 py-2 flex-shrink-0 text-xs font-medium" style={{ background: 'rgba(124,58,237,0.12)', borderBottom: '1px solid rgba(124,58,237,0.25)', color: '#c4b5fd' }}>
+              <Crosshair className="w-3.5 h-3.5" />
+              Drag a box around any question text to get an AI hint — click AI Help again to exit
+            </div>
+          )}
+
           {/* Body */}
           <div className="flex flex-1 overflow-hidden">
-            {/* Paper */}
-            <div className={`overflow-y-auto p-8 ${isFeedback ? 'flex-1' : 'flex-1'}`} style={{ background: '#f8fafc' }}>
-              <div className="max-w-3xl mx-auto bg-white rounded-2xl shadow-2xl p-10">
-                <PaperRenderer content={currentPaper.paper} />
+            {/* Paper scroll area */}
+            <div className="overflow-y-auto flex-1" style={{ background: '#e8eaf0', position: 'relative' }}>
+              <div style={{ padding: '40px 32px', maxWidth: 900, margin: '0 auto' }}>
+
+                {/* Paper card */}
+                <div style={{
+                  background: 'white',
+                  borderRadius: 4,
+                  boxShadow: '0 4px 6px rgba(0,0,0,0.07), 0 20px 60px rgba(0,0,0,0.15)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}>
+                  {/* Red margin line */}
+                  <div style={{ position: 'absolute', left: 56, top: 0, bottom: 0, width: 1.5, background: '#fca5a5', opacity: 0.7 }} />
+
+                  {/* Paper content */}
+                  <div style={{ padding: '56px 64px 72px 80px' }}>
+                    <PaperRenderer content={currentPaper.paper} />
+
+                    {/* Page footer */}
+                    <div style={{ marginTop: 48, paddingTop: 16, borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>IB Mentor AI — Practice Paper</span>
+                      <span style={{ fontSize: 11, color: '#94a3b8' }}>Turn over ▶</span>
+                    </div>
+                  </div>
+                </div>
               </div>
+
+              {/* Drag-select overlay — sits above paper, captures mouse */}
+              {isExam && aiHelpMode && (
+                <div
+                  ref={overlayRef}
+                  style={{
+                    position: 'absolute', inset: 0,
+                    cursor: 'crosshair',
+                    zIndex: 40,
+                    background: 'rgba(124,58,237,0.03)',
+                  }}
+                  onMouseDown={onOverlayMouseDown}
+                  onMouseMove={onOverlayMouseMove}
+                  onMouseUp={onOverlayMouseUp}
+                  onMouseLeave={e => { if (isDragging) onOverlayMouseUp(e as React.MouseEvent) }}
+                />
+              )}
             </div>
 
             {/* Feedback Panel */}
@@ -564,6 +712,80 @@ export default function PracticeTestsPage() {
           </div>
         </div>
 
+        {/* Drag selection rect — fixed viewport overlay */}
+        {isDragging && dragClientStart && dragClientCurrent && (
+          <div style={{
+            position: 'fixed',
+            left: Math.min(dragClientStart.x, dragClientCurrent.x),
+            top: Math.min(dragClientStart.y, dragClientCurrent.y),
+            width: Math.abs(dragClientCurrent.x - dragClientStart.x),
+            height: Math.abs(dragClientCurrent.y - dragClientStart.y),
+            border: '2px solid #7c3aed',
+            background: 'rgba(124,58,237,0.1)',
+            borderRadius: 4,
+            pointerEvents: 'none',
+            zIndex: 9999,
+          }} />
+        )}
+
+        {/* AI hint panel — fixed, appears after drag release */}
+        {aiPanel && (
+          <div style={{
+            position: 'fixed',
+            left: aiPanel.x,
+            top: aiPanel.y,
+            width: 360,
+            borderRadius: 16,
+            background: '#161827',
+            border: '1px solid rgba(124,58,237,0.4)',
+            boxShadow: '0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(124,58,237,0.1)',
+            zIndex: 10000,
+            overflow: 'hidden',
+          }}>
+            {/* Panel header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.07)', background: 'rgba(124,58,237,0.12)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(124,58,237,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <MessageSquare style={{ width: 14, height: 14, color: '#c4b5fd' }} />
+                </div>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 700, color: 'white' }}>AI Hint</p>
+                  <p style={{ fontSize: 11, color: '#7c3aed' }}>Exam mode — hints only</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAiPanel(null)}
+                style={{ width: 28, height: 28, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: 'none', cursor: 'pointer', color: '#64748b' }}
+              >
+                <X style={{ width: 14, height: 14 }} />
+              </button>
+            </div>
+
+            {/* Panel body */}
+            <div style={{ padding: '14px 16px' }}>
+              {aiPanel.loading ? (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#64748b', fontSize: 13 }}>
+                  <Loader2 style={{ width: 16, height: 16, color: '#7c3aed', animation: 'spin 1s linear infinite' }} />
+                  Analysing selected text…
+                </div>
+              ) : (
+                <p style={{ fontSize: 13, lineHeight: 1.65, color: '#cbd5e1' }}>{aiPanel.response}</p>
+              )}
+            </div>
+
+            {!aiPanel.loading && (
+              <div style={{ padding: '0 16px 14px', display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  onClick={() => setAiPanel(null)}
+                  style={{ fontSize: 12, color: '#475569', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 8px', borderRadius: 6 }}
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Submit Modal */}
         {showSubmitModal && (
           <div className="fixed inset-0 flex items-center justify-center z-50" style={{ background: 'rgba(0,0,0,0.85)' }}>
@@ -589,7 +811,7 @@ export default function PracticeTestsPage() {
                 <div className="flex gap-3 mt-4 flex-wrap">
                   {imagePreviewUrls.map((url, i) => (
                     <div key={i} className="relative">
-                      <img src={url} alt={`Upload ${i+1}`} className="w-20 h-20 object-cover rounded-xl" />
+                      <img src={url} alt={`Upload ${i + 1}`} className="w-20 h-20 object-cover rounded-xl" />
                       <button
                         onClick={() => { setImagePreviewUrls(p => p.filter((_, j) => j !== i)); setUploadedImages(p => p.filter((_, j) => j !== i)) }}
                         className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full flex items-center justify-center text-xs"
@@ -605,7 +827,7 @@ export default function PracticeTestsPage() {
               </div>
 
               {imagePreviewUrls.length === 0 && (
-                <p style={{ marginTop: '12px', fontSize: '12px', color: '#f59e0b', textAlign: 'center' }}>
+                <p style={{ marginTop: 12, fontSize: 12, color: '#f59e0b', textAlign: 'center' }}>
                   Upload at least one photo of your answers to continue
                 </p>
               )}
@@ -619,13 +841,15 @@ export default function PracticeTestsPage() {
                   style={{ opacity: imagePreviewUrls.length === 0 ? 0.4 : 1, cursor: imagePreviewUrls.length === 0 ? 'not-allowed' : 'pointer' }}
                 >
                   {analyzing
-                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Marking...</>
+                    ? <><Loader2 className="w-4 h-4 animate-spin" /> Marking…</>
                     : <><Sparkles className="w-4 h-4" /> Get AI Marking</>}
                 </button>
               </div>
             </div>
           </div>
         )}
+
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </MainLayout>
     )
   }
@@ -804,9 +1028,9 @@ export default function PracticeTestsPage() {
               <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '10px' }}>Difficulty</label>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
                 {[
-                  { label: 'Standard',    icon: BookOpen,  desc: 'Core knowledge & application',        color: '#10b981' },
-                  { label: 'Challenging', icon: Zap,       desc: 'Higher-order analysis & evaluation',  color: '#f59e0b' },
-                  { label: 'Mixed',       icon: Sparkles,  desc: 'Recall through evaluation',           color: '#7c3aed' },
+                  { label: 'Standard', icon: BookOpen, desc: 'Core knowledge & application', color: '#10b981' },
+                  { label: 'Challenging', icon: Zap, desc: 'Higher-order analysis & evaluation', color: '#f59e0b' },
+                  { label: 'Mixed', icon: Sparkles, desc: 'Recall through evaluation', color: '#7c3aed' },
                 ].map(d => {
                   const Icon = d.icon
                   const active = selectedDifficulty === d.label
@@ -869,6 +1093,7 @@ export default function PracticeTestsPage() {
                     <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '2px' }}>{new Date(p.generatedAt).toLocaleDateString()}</p>
                   </div>
                   {p.feedback && <span className="tag tag-green">Marked</span>}
+                  <ChevronRight style={{ width: 14, height: 14, color: '#334155', flexShrink: 0 }} />
                 </button>
               ))}
             </div>
