@@ -14,6 +14,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   session: { strategy: 'jwt' },
   callbacks: {
+    authorized({ auth }) {
+      return !!auth?.user
+    },
     jwt({ token, profile }) {
       if (profile) {
         token.id = profile.sub

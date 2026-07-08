@@ -8,7 +8,7 @@ import {
   BookMarked, PenTool, List, Table, ImageIcon, BookOpen,
   Layout, Brain, Loader2, X, Send, Video,
   ChevronRight, RefreshCw, Bot, User,
-  Zap, FileSearch, Star, MessageSquareText
+  Zap, FileSearch, Star, MessageSquareText, GripVertical, Pencil, Trash2
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { DP_UNITS } from '@/data/ib-data'
@@ -108,6 +108,29 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
   const printRef = useRef<HTMLDivElement>(null)
   const chatEndRef = useRef<HTMLDivElement>(null)
   const chatInputRef = useRef<HTMLTextAreaElement>(null)
+  const unitStateCache = useRef<Record<string, {
+    chatMessages: ChatMessage[]
+    generatedContent: Record<string, string>
+    worksheetContent: { id: string; label: string; content: string } | null
+    savedWorksheets: { id: string; label: string; content: string }[]
+    flashcards: Flashcard[]
+    currentCard: number
+    knownCards: Set<number>
+    videoContent: { id: string; label: string; content: string } | null
+    studioView: StudioView
+  }>>({})
+  // Capture all studio state at call time into the ref without needing a dep array
+  const studioStateRef = useRef({
+    chatMessages: [] as ChatMessage[],
+    generatedContent: {} as Record<string, string>,
+    worksheetContent: null as { id: string; label: string; content: string } | null,
+    savedWorksheets: [] as { id: string; label: string; content: string }[],
+    flashcards: [] as Flashcard[],
+    currentCard: 0,
+    knownCards: new Set<number>(),
+    videoContent: null as { id: string; label: string; content: string } | null,
+    studioView: 'list' as StudioView,
+  })
 
   const [units, setUnits] = useState<Unit[]>([])
   const [selectedUnit, setSelectedUnit] = useState<Unit | null>(null)
@@ -127,6 +150,9 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
   const [flashcards, setFlashcards] = useState<Flashcard[]>([])
   const [currentCard, setCurrentCard] = useState(0)
   const [cardFlipped, setCardFlipped] = useState(false)
+  const [flashcardOpen, setFlashcardOpen] = useState(false)
+  const [knownCards, setKnownCards] = useState<Set<number>>(new Set())
+  const [sessionDone, setSessionDone] = useState(false)
 
   // Video state
   const [videoContent, setVideoContent] = useState<{ id: string; label: string; content: string } | null>(null)
@@ -144,6 +170,12 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
   // User context
   const [userLevel, setUserLevel] = useState<'SL' | 'HL'>('SL')
   const [weakTopics, setWeakTopics] = useState<string[]>([])
+
+  // Unit management
+  const [editingUnitId, setEditingUnitId] = useState<string | null>(null)
+  const [editingUnitName, setEditingUnitName] = useState('')
+  const [draggingUnitId, setDraggingUnitId] = useState<string | null>(null)
+  const [dragOverUnitId, setDragOverUnitId] = useState<string | null>(null)
 
   useEffect(() => {
     const data = localStorage.getItem('ib_onboarding_data')
@@ -166,6 +198,26 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages])
 
+  // Keep studioStateRef in sync so switchToUnit always snapshots current state
+  useEffect(() => {
+    studioStateRef.current = {
+      chatMessages, generatedContent, worksheetContent, savedWorksheets,
+      flashcards, currentCard, knownCards, videoContent, studioView,
+    }
+  })
+
+  // Keyboard navigation for flashcards
+  useEffect(() => {
+    if (!flashcardOpen) return
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); setCardFlipped(f => !f) }
+      if (e.key === 'ArrowRight' && currentCard < flashcards.length - 1) { setCurrentCard(c => c + 1); setCardFlipped(false) }
+      if (e.key === 'ArrowLeft' && currentCard > 0) { setCurrentCard(c => c - 1); setCardFlipped(false) }
+    }
+    window.addEventListener('keydown', handler)
+    return () => window.removeEventListener('keydown', handler)
+  }, [flashcardOpen, currentCard, flashcards.length])
+
   const resetStudio = () => {
     setChatMessages([])
     setStudioView('list')
@@ -174,8 +226,45 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
     setFlashcards([])
     setCurrentCard(0)
     setCardFlipped(false)
+    setFlashcardOpen(false)
+    setKnownCards(new Set())
+    setSessionDone(false)
     setGeneratedContent({})
     setSavedWorksheets([])
+  }
+
+  const switchToUnit = (unit: Unit) => {
+    // Snapshot current studio state into cache before switching
+    if (selectedUnit) {
+      unitStateCache.current[selectedUnit.id] = { ...studioStateRef.current }
+    }
+    // Restore cached state for the target unit, or start fresh
+    const cached = unitStateCache.current[unit.id]
+    if (cached) {
+      setChatMessages(cached.chatMessages)
+      setGeneratedContent(cached.generatedContent)
+      setWorksheetContent(cached.worksheetContent)
+      setSavedWorksheets(cached.savedWorksheets)
+      setFlashcards(cached.flashcards)
+      setCurrentCard(cached.currentCard)
+      setKnownCards(cached.knownCards)
+      setVideoContent(cached.videoContent)
+      setStudioView(cached.studioView)
+    } else {
+      setChatMessages([])
+      setGeneratedContent({})
+      setWorksheetContent(null)
+      setSavedWorksheets([])
+      setFlashcards([])
+      setCurrentCard(0)
+      setKnownCards(new Set())
+      setVideoContent(null)
+      setStudioView('list')
+    }
+    setCardFlipped(false)
+    setFlashcardOpen(false)
+    setSessionDone(false)
+    setSelectedUnit(unit)
   }
 
   // ── AI Chat ─────────────────────────────────────────────
@@ -267,10 +356,16 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
             cards.push({ front: lines[i].replace(/^[-*]\s*/, ''), back: lines[i + 1].replace(/^[-*]\s*/, '') })
         }
         setFlashcards(cards.length ? cards : [{ front: 'No flashcards generated', back: 'Try again or check your API key' }])
+        setCurrentCard(0)
+        setCardFlipped(false)
+        setKnownCards(new Set())
+        setSessionDone(false)
         setStudioView('flashcards')
+        setFlashcardOpen(true)
       } catch {
         setFlashcards([{ front: 'Error', back: 'Failed to generate. Please check your API key.' }])
         setStudioView('flashcards')
+        setFlashcardOpen(true)
       }
 
     } else if (item.action === 'video') {
@@ -303,8 +398,48 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
   }
 
   const addUnit = () => {
-    const u: Unit = { id: Date.now().toString(), name: 'New Unit', code: 'NEW', sources: [], weak_topics: [] }
+    const id = Date.now().toString()
+    const u: Unit = { id, name: 'New Unit', code: 'NEW', sources: [], weak_topics: [] }
     setUnits(prev => [...prev, u])
+    setEditingUnitId(id)
+    setEditingUnitName('New Unit')
+  }
+
+  const deleteUnit = (id: string) => {
+    setUnits(prev => prev.filter(u => u.id !== id))
+    if (selectedUnit?.id === id) setSelectedUnit(null)
+  }
+
+  const startRenameUnit = (unit: Unit) => {
+    setEditingUnitId(unit.id)
+    setEditingUnitName(unit.name)
+  }
+
+  const commitRenameUnit = () => {
+    if (!editingUnitId) return
+    const name = editingUnitName.trim() || 'Unit'
+    setUnits(prev => prev.map(u => u.id === editingUnitId ? { ...u, name } : u))
+    if (selectedUnit?.id === editingUnitId) setSelectedUnit(prev => prev ? { ...prev, name } : prev)
+    setEditingUnitId(null)
+  }
+
+  const handleDragStart = (id: string) => setDraggingUnitId(id)
+  const handleDragOver = (e: React.DragEvent, id: string) => {
+    e.preventDefault()
+    setDragOverUnitId(id)
+  }
+  const handleDrop = (targetId: string) => {
+    if (!draggingUnitId || draggingUnitId === targetId) { setDraggingUnitId(null); setDragOverUnitId(null); return }
+    setUnits(prev => {
+      const arr = [...prev]
+      const from = arr.findIndex(u => u.id === draggingUnitId)
+      const to = arr.findIndex(u => u.id === targetId)
+      const [item] = arr.splice(from, 1)
+      arr.splice(to, 0, item)
+      return arr
+    })
+    setDraggingUnitId(null)
+    setDragOverUnitId(null)
   }
 
   const saveWorksheet = () => {
@@ -359,17 +494,82 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
                 {units.map((unit, i) => {
                   const isWeak = weakTopics.some(t => unit.name.toLowerCase().includes(t.toLowerCase()))
                   const accent = ['#7c3aed','#06b6d4','#10b981','#f59e0b','#ec4899','#8b5cf6'][i % 6]
+                  const isDragOver = dragOverUnitId === unit.id && draggingUnitId !== unit.id
+                  const cached = unitStateCache.current[unit.id]
+                  const msgCount = cached?.chatMessages.length ?? 0
+                  const hasGenerated = cached && (Object.keys(cached.generatedContent).length > 0 || cached.flashcards.length > 0 || cached.savedWorksheets.length > 0)
                   return (
-                    <button key={unit.id} onClick={() => { setSelectedUnit(unit); resetStudio() }} className="card card-hover" style={{ padding: '32px 24px', textAlign: 'center', cursor: 'pointer', borderTop: `3px solid ${accent}`, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
-                      <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Folder style={{ width: '32px', height: '32px', color: accent }} />
+                    <div
+                      key={unit.id}
+                      draggable
+                      onDragStart={() => handleDragStart(unit.id)}
+                      onDragOver={e => handleDragOver(e, unit.id)}
+                      onDrop={() => handleDrop(unit.id)}
+                      onDragEnd={() => { setDraggingUnitId(null); setDragOverUnitId(null) }}
+                      className="card"
+                      style={{
+                        padding: '28px 20px 20px',
+                        textAlign: 'center',
+                        borderTop: `3px solid ${accent}`,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px',
+                        position: 'relative',
+                        opacity: draggingUnitId === unit.id ? 0.4 : 1,
+                        outline: isDragOver ? `2px dashed ${accent}` : 'none',
+                        outlineOffset: 2,
+                        transition: 'opacity 0.15s, outline 0.1s',
+                        cursor: 'grab',
+                      }}
+                    >
+                      {/* Action buttons */}
+                      <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 4 }}>
+                        <button
+                          onClick={e => { e.stopPropagation(); startRenameUnit(unit) }}
+                          style={{ width: 26, height: 26, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer', color: '#64748b' }}
+                          title="Rename"
+                        >
+                          <Pencil style={{ width: 11, height: 11 }} />
+                        </button>
+                        <button
+                          onClick={e => { e.stopPropagation(); deleteUnit(unit.id) }}
+                          style={{ width: 26, height: 26, borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)', cursor: 'pointer', color: '#f87171' }}
+                          title="Delete"
+                        >
+                          <Trash2 style={{ width: 11, height: 11 }} />
+                        </button>
                       </div>
-                      <div>
-                        <p style={{ fontWeight: 700, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>{unit.name}</p>
-                        {isWeak && <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'rgba(245,158,11,0.15)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.3)' }}>Priority</span>}
-                        {unit.sources.length > 0 && <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{unit.sources.length} source{unit.sources.length !== 1 ? 's' : ''}</p>}
-                      </div>
-                    </button>
+
+                      <button
+                        onClick={() => { if (editingUnitId !== unit.id) switchToUnit(unit) }}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, width: '100%' }}
+                      >
+                        <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: `${accent}18`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <Folder style={{ width: '32px', height: '32px', color: accent }} />
+                        </div>
+                        <div style={{ width: '100%' }}>
+                          {editingUnitId === unit.id ? (
+                            <input
+                              autoFocus
+                              value={editingUnitName}
+                              onChange={e => setEditingUnitName(e.target.value)}
+                              onBlur={commitRenameUnit}
+                              onKeyDown={e => { if (e.key === 'Enter') commitRenameUnit(); if (e.key === 'Escape') setEditingUnitId(null) }}
+                              onClick={e => e.stopPropagation()}
+                              style={{ width: '100%', textAlign: 'center', fontSize: 14, fontWeight: 700, color: '#fff', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(124,58,237,0.5)', borderRadius: 8, padding: '4px 8px', outline: 'none', fontFamily: 'inherit' }}
+                            />
+                          ) : (
+                            <p style={{ fontWeight: 700, fontSize: '15px', color: '#fff', marginBottom: '4px' }}>{unit.name}</p>
+                          )}
+                          {isWeak && <span style={{ display: 'inline-block', padding: '2px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: 600, background: 'rgba(245,158,11,0.15)', color: '#fbbf24', border: '1px solid rgba(245,158,11,0.3)' }}>Priority</span>}
+                          {unit.sources.length > 0 && <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>{unit.sources.length} source{unit.sources.length !== 1 ? 's' : ''}</p>}
+                          {(msgCount > 0 || hasGenerated) && (
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 8 }}>
+                              {msgCount > 0 && <span style={{ fontSize: 11, color: '#10b981', background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 6, padding: '2px 7px' }}>💬 {msgCount}</span>}
+                              {hasGenerated && <span style={{ fontSize: 11, color: '#a78bfa', background: 'rgba(124,58,237,0.12)', border: '1px solid rgba(124,58,237,0.2)', borderRadius: 6, padding: '2px 7px' }}>✦ saved</span>}
+                            </div>
+                          )}
+                        </div>
+                      </button>
+                    </div>
                   )
                 })}
               </div>
@@ -411,12 +611,63 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
             {units.map(unit => {
               const isSelected = selectedUnit?.id === unit.id
               const isWeak = weakTopics.some(t => unit.name.toLowerCase().includes(t.toLowerCase()))
+              const isDragOver = dragOverUnitId === unit.id && draggingUnitId !== unit.id
+              const cachedState = isSelected ? studioStateRef.current : unitStateCache.current[unit.id]
+              const hasProgress = cachedState && (cachedState.chatMessages.length > 0 || Object.keys(cachedState.generatedContent).length > 0 || cachedState.flashcards.length > 0 || cachedState.savedWorksheets.length > 0)
               return (
-                <button key={unit.id} onClick={() => { setSelectedUnit(unit); resetStudio() }} style={{ width: '100%', display: 'flex', alignItems: 'center', gap: '8px', padding: '9px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: 500, background: isSelected ? 'rgba(124,58,237,0.15)' : 'transparent', color: isSelected ? '#c4b5fd' : 'var(--text-secondary)', border: isSelected ? '1px solid rgba(124,58,237,0.25)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s', marginBottom: '2px' }}>
-                  {isSelected ? <FolderOpen style={{ width: '14px', height: '14px', flexShrink: 0 }} /> : <Folder style={{ width: '14px', height: '14px', flexShrink: 0 }} />}
-                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{unit.name}</span>
-                  {isWeak && <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f59e0b', flexShrink: 0 }} />}
-                </button>
+                <div
+                  key={unit.id}
+                  draggable
+                  onDragStart={() => handleDragStart(unit.id)}
+                  onDragOver={e => handleDragOver(e, unit.id)}
+                  onDrop={() => handleDrop(unit.id)}
+                  onDragEnd={() => { setDraggingUnitId(null); setDragOverUnitId(null) }}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 4, marginBottom: 2,
+                    opacity: draggingUnitId === unit.id ? 0.4 : 1,
+                    borderRadius: 8,
+                    outline: isDragOver ? '2px dashed rgba(124,58,237,0.6)' : 'none',
+                    outlineOffset: 1,
+                  }}
+                >
+                  <GripVertical style={{ width: 12, height: 12, color: '#334155', flexShrink: 0, cursor: 'grab' }} />
+                  {editingUnitId === unit.id ? (
+                    <input
+                      autoFocus
+                      value={editingUnitName}
+                      onChange={e => setEditingUnitName(e.target.value)}
+                      onBlur={commitRenameUnit}
+                      onKeyDown={e => { if (e.key === 'Enter') commitRenameUnit(); if (e.key === 'Escape') setEditingUnitId(null) }}
+                      style={{ flex: 1, fontSize: 12, fontWeight: 600, color: '#fff', background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(124,58,237,0.5)', borderRadius: 6, padding: '5px 8px', outline: 'none', fontFamily: 'inherit' }}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => switchToUnit(unit)}
+                      style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 8px', borderRadius: 7, fontSize: 12, fontWeight: 500, background: isSelected ? 'rgba(124,58,237,0.15)' : 'transparent', color: isSelected ? '#c4b5fd' : 'var(--text-secondary)', border: isSelected ? '1px solid rgba(124,58,237,0.25)' : '1px solid transparent', cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s', minWidth: 0 }}
+                    >
+                      {isSelected ? <FolderOpen style={{ width: 13, height: 13, flexShrink: 0 }} /> : <Folder style={{ width: 13, height: 13, flexShrink: 0 }} />}
+                      <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{unit.name}</span>
+                      {isWeak && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#f59e0b', flexShrink: 0 }} />}
+                      {hasProgress && !isWeak && <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#10b981', flexShrink: 0 }} title="Has saved progress" />}
+                    </button>
+                  )}
+                  <div style={{ display: 'flex', gap: 2, flexShrink: 0 }}>
+                    <button
+                      onClick={() => startRenameUnit(unit)}
+                      style={{ width: 22, height: 22, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#334155', opacity: 0.7 }}
+                      title="Rename"
+                    >
+                      <Pencil style={{ width: 10, height: 10 }} />
+                    </button>
+                    <button
+                      onClick={() => deleteUnit(unit.id)}
+                      style={{ width: 22, height: 22, borderRadius: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'none', border: 'none', cursor: 'pointer', color: '#f87171', opacity: 0.7 }}
+                      title="Delete"
+                    >
+                      <Trash2 style={{ width: 10, height: 10 }} />
+                    </button>
+                  </div>
+                </div>
               )
             })}
           </div>
@@ -646,35 +897,35 @@ export default function SubjectWorkspace({ params }: { params: Promise<{ subject
                 </div>
               )}
 
-              {/* ── FLASHCARD VIEW ── */}
+              {/* ── FLASHCARD VIEW (studio panel — mini preview) ── */}
               {studioView === 'flashcards' && (
                 <div>
                   {flashcards.length > 0 ? (
-                    <>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                        <p style={{ fontSize: '12px', fontWeight: 700, color: '#fff' }}>Card {currentCard + 1} of {flashcards.length}</p>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ padding: '28px 20px', borderRadius: 16, background: 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(6,182,212,0.08))', border: '1px solid rgba(124,58,237,0.25)', marginBottom: 14 }}>
+                        <p style={{ fontSize: 28, fontWeight: 900, color: '#fff', marginBottom: 4 }}>{flashcards.length}</p>
+                        <p style={{ fontSize: 12, color: '#a78bfa' }}>cards ready</p>
+                        <div style={{ display: 'flex', justifyContent: 'center', gap: 4, marginTop: 12 }}>
+                          {flashcards.slice(0, 8).map((_, i) => (
+                            <div key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: knownCards.has(i) ? '#10b981' : 'rgba(255,255,255,0.15)' }} />
+                          ))}
+                          {flashcards.length > 8 && <span style={{ fontSize: 10, color: '#475569' }}>+{flashcards.length - 8}</span>}
+                        </div>
                       </div>
                       <button
-                        onClick={() => setCardFlipped(f => !f)}
-                        style={{ width: '100%', minHeight: '160px', borderRadius: '14px', padding: '24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: cardFlipped ? 'linear-gradient(135deg, rgba(124,58,237,0.2), rgba(6,182,212,0.12))' : 'rgba(255,255,255,0.04)', border: `1px solid ${cardFlipped ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', transition: 'all 0.25s', textAlign: 'center', marginBottom: '12px' }}
+                        onClick={() => { setCurrentCard(0); setCardFlipped(false); setSessionDone(false); setFlashcardOpen(true) }}
+                        style={{ width: '100%', padding: '12px', borderRadius: 12, background: 'linear-gradient(135deg, #7c3aed, #06b6d4)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
                       >
-                        <p style={{ fontSize: '10px', fontWeight: 700, color: cardFlipped ? '#a78bfa' : 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '12px' }}>{cardFlipped ? 'Answer' : 'Question'}</p>
-                        <p style={{ fontSize: '14px', fontWeight: 600, color: '#fff', lineHeight: 1.5 }}>{cardFlipped ? flashcards[currentCard]?.back : flashcards[currentCard]?.front}</p>
-                        <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '14px' }}>Tap to {cardFlipped ? 'see question' : 'reveal answer'}</p>
+                        Study Flashcards →
                       </button>
-                      <div style={{ display: 'flex', gap: '8px' }}>
-                        <button onClick={() => { setCurrentCard(c => Math.max(0, c - 1)); setCardFlipped(false) }} disabled={currentCard === 0} style={{ flex: 1, padding: '10px', borderRadius: '9px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: currentCard === 0 ? 'var(--text-muted)' : '#fff', cursor: currentCard === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '12px', fontWeight: 600 }}>
-                          <ChevronLeft style={{ width: '13px', height: '13px' }} /> Prev
-                        </button>
-                        <button onClick={() => { setCurrentCard(c => Math.min(flashcards.length - 1, c + 1)); setCardFlipped(false) }} disabled={currentCard === flashcards.length - 1} style={{ flex: 1, padding: '10px', borderRadius: '9px', background: currentCard < flashcards.length - 1 ? 'rgba(124,58,237,0.2)' : 'rgba(255,255,255,0.04)', border: `1px solid ${currentCard < flashcards.length - 1 ? 'rgba(124,58,237,0.3)' : 'rgba(255,255,255,0.08)'}`, color: currentCard < flashcards.length - 1 ? '#a78bfa' : 'var(--text-muted)', cursor: currentCard < flashcards.length - 1 ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', fontSize: '12px', fontWeight: 600 }}>
-                          Next <ChevronRight style={{ width: '13px', height: '13px' }} />
-                        </button>
-                      </div>
-                    </>
+                      {knownCards.size > 0 && (
+                        <p style={{ fontSize: 11, color: '#10b981', marginTop: 8 }}>{knownCards.size}/{flashcards.length} mastered</p>
+                      )}
+                    </div>
                   ) : (
                     <div style={{ textAlign: 'center', padding: '40px 0' }}>
                       <Loader2 style={{ width: '28px', height: '28px', color: '#f59e0b', margin: '0 auto 12px', animation: 'spin 1s linear infinite' }} />
-                      <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Generating flashcards...</p>
+                      <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>Generating flashcards…</p>
                     </div>
                   )}
                 </div>
